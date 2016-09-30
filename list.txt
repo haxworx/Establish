@@ -1,0 +1,13 @@
+Arch Linux (i386/amd64)=http://www.mirrorservice.org/sites/ftp.archlinux.org/iso/2016.09.03/archlinux-2016.09.03-dual.iso
+Void Linux (amd64)=https://repo.voidlinux.eu/live/current/void-live-x86_64-20160420-enlightenment.iso
+Debian GNU/Linux (i386/amd64)=http://debian.inode.at/debian-cd/8.6.0/multi-arch/iso-cd/debian-8.6.0-amd64-i386-netinst.iso
+FreeBSD v10.3 (x86)=http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES/10.3/FreeBSD-10.3-RELEASE-i386-memstick.img
+FreeBSD v10.3 (amd64)=http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES/10.3/FreeBSD-10.3-RELEASE-amd64-memstick.img
+NetBSD v7.0 (i386)=http://mirror.planetunix.net/pub/NetBSD/iso/7.0/NetBSD-7.0-i386.iso
+NetBSD v7.0 (amd64)=http://mirror.planetunix.net/pub/NetBSD/iso/7.0/NetBSD-7.0-amd64.iso
+OpenBSD v6.0 (i386)=http://mirror.ox.ac.uk/pub/OpenBSD/6.0/i386/install60.fs 
+OpenBSD v6.0 (amd64)=http://mirror.ox.ac.uk/pub/OpenBSD/6.0/amd64/install60.fs
+
+
+
+# This is an example. Place this file on a web server and update as needed...

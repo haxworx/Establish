@@ -1,0 +1,20 @@
+Best building from source.
+
+You'll need to install EFL from enlightenment.org.
+
+Most distributions will use the package names of either:
+
+efl-dev or efl-devel 
+
+You'll also need pkg-config and a C compiler!
+
+This program also works with OpenBSD.
+
+Simply run "make" or "gmake" and run the "establish"
+binary.
+
+FIXME:
+
+Make disk detection work on FreeBSD, NetBSD and DragonFly 
+BSD.
+
