@@ -16,7 +16,7 @@ INCLUDES = $(shell pkg-config --cflags $(PKGS))
 OBJECTS = disks.o ui.o core.o main.o
 
 $(TARGET) : $(OBJECTS)
-	$(CC) $(FLAGS) $(OBJECTS) $(FLAGS) -o $@
+	$(CC) $(FLAGS) $(OBJECTS) -o $@
 
 main.o: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC_DIR)/main.c -o $@
