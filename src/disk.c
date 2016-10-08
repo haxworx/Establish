@@ -31,6 +31,7 @@
 #include "disk.h"
 #include "ui.h"
 
+
 extern Ui_Main_Contents *ui;
 
 void _clear_storage(void)
@@ -43,6 +44,14 @@ void _clear_storage(void)
           storage[i] = NULL;
        } 
     }
+}
+
+static int _string_cmp(const void *a, const void *b)
+{
+    const char *s1 = a;
+    const char *s2 = b;
+
+    return strcmp(s1, s2);
 }
 
 int system_get_disks(void)
@@ -102,44 +111,56 @@ skip:
     free(drives);
 
 #else 
-    /* This is problematic...eeze is broken atm. */
-    eeze_init();
-    Eina_List *devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_REMOVABLE, NULL);
+    Eina_List *devices, *parents, *blacklist;
     Eina_List *l;
     char *data;
+    const char *path;
 
+    parents = NULL; 
+    eeze_init();
+
+    devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_MOUNTABLE, NULL); 
     EINA_LIST_FOREACH(devices, l, data) {
-        char buf[PATH_MAX];
-      
-	snprintf(buf, sizeof(buf), "%s/block", data);
-
-	DIR *dir = opendir(buf);
-	struct dirent *dh;
-	while (dh = readdir(dir)) {
-            if (dh->d_name[0] == '.') continue;
-	    char p[PATH_MAX];
-            snprintf(p, sizeof(p), "%s/%s", buf, dh->d_name);
-            struct stat fstats;
-	    stat(p, &fstats);
-	    if (S_ISDIR(fstats.st_mode)) {
-                char devpath[PATH_MAX];
-                snprintf(devpath, sizeof(devpath), "/dev/%s", dh->d_name);
-	        storage[disk_count++] = strdup(devpath);
-		break;
+	path = eeze_udev_syspath_get_parent((char *) data); 
+	if (path) {
+            if (!eina_list_data_find(parents, path)) {
+                parents = eina_list_append(parents, path);	
 	    }
 	}
-	closedir(dir); 
     }
 
     eina_list_free(devices);
 
+    /* This list should contain mounted file systems to avoid */
+
+    devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_INTERNAL, NULL);
+    EINA_LIST_FOREACH(devices, l, data) {
+        path = eeze_udev_syspath_get_devpath((char *) data);
+	if (path) {
+            blacklist = eina_list_append(blacklist, path); 
+	}
+    }
+
+    parents = eina_list_sort(parents, -1, _string_cmp);
+
+    EINA_LIST_FOREACH(parents, l, data) {
+        path = eeze_udev_syspath_get_devpath(data);
+	if (!path) continue;
+	if (!eina_list_data_find(blacklist, path)) {
+	    storage[disk_count++] = strdup(path);
+	    printf("Adding: %s\n", path);
+	}
+    }
+
+    eina_list_free(devices);
+    eina_list_free(parents);
+    eina_list_free(blacklist);
+
     eeze_shutdown();
 #endif   
     storage[disk_count] = NULL;
-    if (disk_count) {
-        if (ui) {
-            update_combobox_storage();
-        }
+    if (disk_count && ui) {
+        update_combobox_storage();
     }
  
     return disk_count;
