@@ -148,7 +148,7 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
             break;
         }
          
-        pos += chunk; 
+        pos += count;
         chunk -= count;
     }
 
