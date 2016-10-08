@@ -225,6 +225,7 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
 
     h->fd = open(local_uri,  O_CREAT | O_WRONLY | O_CREAT, 0644);
     if (h->fd == -1) {
+	error_popup(ui->win);
         return;
     }
 
@@ -541,7 +542,7 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
         ecore_thread_feedback(thread, tmp);
 
         if (ecore_thread_check(thread)) {
-	    return;
+	    return NULL;
         }
 
         memset(buf, 0, bytes);

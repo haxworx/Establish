@@ -333,12 +333,6 @@ Ui_Main_Contents *elm_window_create(void)
 
     evas_object_smart_callback_add(ui->win, "delete,request", win_del, NULL);
     
-    uid_t euid = geteuid();
-    if (euid != 0) {
-        error_popup(ui->win);
-    }
-
- 
     return ui;
 }
 
