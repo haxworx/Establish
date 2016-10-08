@@ -92,7 +92,7 @@ void error_popup(Evas_Object *win)
     elm_win_autodel_set(win, EINA_TRUE);
 
     Evas_Object *content = elm_label_add(win);
-    elm_object_text_set(content, "<align=center>You don't have valid permissions. <br>Try running with 'sudo' or as root.</align>");
+    elm_object_text_set(content, "<align=center>You don't have valid permissions to write to that device.</align>");
 
     Evas_Object *popup = elm_popup_add(win);
 
