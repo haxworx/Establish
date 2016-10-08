@@ -31,7 +31,6 @@
 #include "disk.h"
 #include "ui.h"
 
-
 extern Ui_Main_Contents *ui;
 
 void _clear_storage(void)
@@ -111,15 +110,18 @@ skip:
     free(drives);
 
 #else 
-    Eina_List *devices, *parents, *blacklist;
+    Eina_List *devices = NULL, *parents = NULL, *blacklist = NULL;
     Eina_List *l;
     char *data;
     const char *path;
 
-    parents = NULL; 
     eeze_init();
 
     devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_MOUNTABLE, NULL); 
+    if (!devices) {
+        devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_REMOVABLE, NULL);
+    }
+
     EINA_LIST_FOREACH(devices, l, data) {
 	path = eeze_udev_syspath_get_parent((char *) data); 
 	if (path) {

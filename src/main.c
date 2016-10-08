@@ -29,6 +29,7 @@
 
 #include "ui.h"
 #include "core.h"
+#include "disk.h"
 
 Ui_Main_Contents *ui = NULL;
 
