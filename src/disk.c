@@ -62,13 +62,13 @@ int system_get_disks(void)
 #if defined(__OpenBSD__)
     static const mib[] = { CTL_HW, HW_DISKNAMES };
     static const unsigned int miblen = 2;
-    char buf[128];
+    char buf[256];
     char *drives;
     size_t len;
 
     sysctl(mib, miblen, NULL, &len, NULL, 0);
 
-    if (!len) return;
+    if (!len) return 0;
 
     drives = calloc(1, len + 1);
     if (!drives) {
@@ -108,7 +108,32 @@ skip:
     }
 
     free(drives);
+#elif defined(__FreeBSD__)
+    char buf[256];
+    char *drives;
+    size_t len;
 
+    sysctlbyname("kern.disks", NULL, &len, NULL, 0);
+
+    drives = calloc(1, len + 1);
+
+    sysctlbyname("kern.disks", drives, &len, NULL, 0);
+
+    char *s = drives;
+    while (s) {
+        char *end = strchr(s, ' ');
+	if (end)  
+	*end = '\0';
+	snprintf(buf, sizeof(buf), "/dev/%s", s);
+	storage[disk_count++] = strdup(buf);
+	if (!end) {
+            break;	
+	}
+	end++;
+	s = end;
+    }
+
+    free(drives);
 #else 
     Eina_List *devices = NULL, *parents = NULL, *blacklist = NULL;
     Eina_List *l;
