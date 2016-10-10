@@ -56,26 +56,30 @@ static int _string_cmp(const void *a, const void *b)
 int system_get_disks(void)
 {
     int disk_count = 0;
+    char buf[256];
+    char *drives;
+    size_t len;
 
     _clear_storage();
 
 #if defined(__OpenBSD__)
     static const mib[] = { CTL_HW, HW_DISKNAMES };
     static const unsigned int miblen = 2;
-    char buf[256];
-    char *drives;
-    size_t len;
 
-    sysctl(mib, miblen, NULL, &len, NULL, 0);
+    if ((sysctl(mib, miblen, NULL, &len, NULL, 0)) < 0) {
+        return (0);
+    }
 
-    if (!len) return 0;
+    if (!len) return (0);
 
     drives = calloc(1, len + 1);
     if (!drives) {
-        return 0;
+        return (0);
     }
 
-    sysctl(mib, miblen, drives, &len, NULL, 0);
+    if ((sysctl(mib, miblen, drives, &len, NULL, 0)) < 0) {
+        return (0); 
+    }
 
     char *s = drives;
     while (s) {
@@ -86,9 +90,7 @@ int system_get_disks(void)
       
         *end = '\0';
  
-        /* Do not expose common drives */       
-        if (!strcmp(s, "sd0") || !strcmp(s, "hd0") ||
-            !strncmp(s, "cd", 2)) {
+        if (!strncmp(s, "cd", 2)) {
             goto skip;
         }
 
@@ -97,7 +99,6 @@ int system_get_disks(void)
         }
 
         snprintf(buf, sizeof(buf), "/dev/%sc", s);
-        printf("buffer: %s\n\n", buf);
         storage[disk_count++] = strdup(buf);
 skip:
         end++;
@@ -108,24 +109,35 @@ skip:
     }
 
     free(drives);
-#elif defined(__FreeBSD__)
-    char buf[256];
-    char *drives;
-    size_t len;
 
-    sysctlbyname("kern.disks", NULL, &len, NULL, 0);
+#elif defined(__FreeBSD__)
+
+    if ((sysctlbyname("kern.disks", NULL, &len, NULL, 0)) < 0) {
+        return (0);
+    }
 
     drives = calloc(1, len + 1);
+    if (!drives) {
+        return (0);
+    }
 
-    sysctlbyname("kern.disks", drives, &len, NULL, 0);
-
+    if ((sysctlbyname("kern.disks", drives, &len, NULL, 0)) < 0) {
+        return (0);
+    }
+    
     char *s = drives;
     while (s) {
         char *end = strchr(s, ' ');
 	if (end)  
 	*end = '\0';
+
+	if (!strncmp(s, "cd", 2)) {
+            goto skip;
+        }
+	
 	snprintf(buf, sizeof(buf), "/dev/%s", s);
 	storage[disk_count++] = strdup(buf);
+skip:
 	if (!end) {
             break;	
 	}
@@ -134,6 +146,7 @@ skip:
     }
 
     free(drives);
+
 #else 
     Eina_List *devices = NULL, *parents = NULL, *blacklist = NULL;
     Eina_List *l;
@@ -186,10 +199,12 @@ skip:
     eeze_shutdown();
 #endif   
     storage[disk_count] = NULL;
+
     if (disk_count && ui) {
+        qsort(storage, disk_count, sizeof(char *), _string_cmp);
         update_combobox_storage();
     }
- 
-    return disk_count;
+
+    return (disk_count);
 }
 
