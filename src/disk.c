@@ -47,8 +47,8 @@ void _clear_storage(void)
 
 static int _string_cmp(const void *a, const void *b)
 {
-    const char *s1 = a;
-    const char *s2 = b;
+    const char *s1 = *(const char **) a;
+    const char *s2 = *(const char **) b;
 
     return strcmp(s1, s2);
 }
