@@ -200,8 +200,11 @@ skip:
 #endif   
     storage[disk_count] = NULL;
 
-    if (disk_count && ui) {
+    if (disk_count) {
         qsort(storage, disk_count, sizeof(char *), _string_cmp);
+    }
+
+    if (ui) {
         update_combobox_storage();
     }
 
