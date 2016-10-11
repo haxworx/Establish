@@ -143,7 +143,7 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 
     while (chunk) {
         ssize_t count =  write(h->fd, pos, chunk);
-
+    printf("ahaha! %d\n\n", count);
         if (count <= 0) {
             break;
         }
@@ -163,6 +163,8 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     Ecore_Con_Event_Url_Complete *url_complete = event_info;
 
     close(h->fd);
+
+    sync();
 
     unsigned char result[SHA256_DIGEST_LENGTH] = { 0 };
     SHA256_Final(result, &h->ctx);
