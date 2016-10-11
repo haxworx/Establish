@@ -223,7 +223,7 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
         return;
     }
 
-    h->fd = open(local_uri,  O_CREAT | O_WRONLY | O_CREAT, 0644);
+    h->fd = open(local_uri,  O_WRONLY | O_CREAT, 0644);
     if (h->fd == -1) {
 	error_popup(ui->win);
         return;
