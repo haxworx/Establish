@@ -211,10 +211,12 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
    if (!local_url) return;
 
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
+
+#if defined(__linux__) || defined(__OpenBSD__)
    ecore_www_file_save(remote_url, local_url);
 
    return; 
-   
+#endif 
    /* CANNOT REACH: this is the fallback engine */ 
 
    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
