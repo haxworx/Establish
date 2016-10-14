@@ -170,6 +170,7 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     close(h->fd);
 
     sync();
+    sync();
 
     unsigned char result[SHA256_DIGEST_LENGTH] = { 0 };
     SHA256_Final(result, &h->ctx);
