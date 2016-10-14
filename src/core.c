@@ -92,7 +92,7 @@ _list_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 
     total += url_data->size;
 
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 static Eina_Bool
@@ -112,7 +112,7 @@ _list_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     
     populate_list();
 
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 Eina_Bool
@@ -131,7 +131,7 @@ get_distribution_list(void)
 
     ecore_con_url_get(handler->conn);
 
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 
@@ -157,7 +157,7 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
         chunk -= count;
     }
 
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 static Eina_Bool
@@ -197,7 +197,7 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     
     //free(h);
 
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 static Eina_Bool
@@ -205,12 +205,12 @@ _download_progress_cb(void *data EINA_UNUSED, int type EINA_UNUSED, void *event_
 {
     Ecore_Con_Event_Url_Progress *url_progress = event_info;
     if (url_progress->down.now == 0 || url_progress->down.total == 0) {
-        return EINA_TRUE;
+        return (EINA_TRUE);
     }
 
     elm_progressbar_value_set(ui->progressbar, (double) (url_progress->down.now / url_progress->down.total));
     
-    return EINA_TRUE;
+    return (EINA_TRUE);
 }
 
 static handler_t *h;
@@ -276,7 +276,7 @@ from_url_host(char *host)
         addr += strlen("http://");
         end = strchr(addr, '/');
         *end = '\0';
-        return addr;
+        return (addr);
     }
 
     str = strstr(addr, "https://");
@@ -284,22 +284,22 @@ from_url_host(char *host)
         addr += strlen("https://");
         end = strchr(addr, '/');
         *end = '\0';
-        return addr;
+        return (addr);
     }
 
-    return NULL;
+    return (NULL);
 }
 
 char *
 from_url_path(char *path)
 {
-    if (path == NULL) return NULL;
+    if (path == NULL) return (NULL);
 
     char *addr = strdup(path);
     char *p = addr;
 
     if (!p) {
-        return NULL;
+        return (NULL);
     }
  
     char *str = strstr(addr, "http://");
@@ -307,7 +307,7 @@ from_url_path(char *path)
         str += 7;
         char *p = strchr(str, '/');
         if (p) {
-            return p;
+            return (p);
         }
     }
 
@@ -316,11 +316,11 @@ from_url_path(char *path)
         str += 8;
         char *p = strchr(str, '/');
         if (p) {
-            return p; 
+            return (p); 
         }
     }
 
-    return p;
+    return (p);
 }
 
 BIO *
@@ -356,7 +356,7 @@ connect_ssl(const char *hostname, int port)
         Error("BIO_do_connect");
     }
 
-    return bio;
+    return (bio);
 }
 
 typedef struct header_t header_t;
@@ -395,12 +395,12 @@ check_one_http_header(int sock, BIO *bio, header_t * headers)
 
 
         if (headers->content_length && strlen(buf) == 2) {
-            return 1;                                  // found!!
+            return (1);                                  // found!!
         }
 
         memset(buf, 0, 8192);
     }
-    return 0;                                          // not found
+    return (0);                                          // not found
 }
 
 
@@ -431,7 +431,7 @@ check_http_headers(int sock, BIO *bio, const char *addr, const char *file)
     if (!headers.content_length)
         Error("BAD BAD HTTP HEADERS!");
 
-    return headers.content_length;
+    return (headers.content_length);
 }
 
 
@@ -461,10 +461,10 @@ connect_tcp(const char *hostname, int port)
                     sizeof(struct sockaddr));
 
     if (status == 0) {
-        return sock;
+        return (sock);
     }
 
-    return 0;
+    return (0);
 }
 
 #define CHUNK 512
@@ -550,7 +550,7 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
         ecore_thread_feedback(thread, tmp);
 
         if (ecore_thread_check(thread)) {
-	    return NULL;
+	    return (NULL);
         }
 
         memset(buf, 0, bytes);
@@ -569,6 +569,6 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
         j += 2;
     } 
     
-    return strdup(sha256);
+    return (strdup(sha256));
 }
 
