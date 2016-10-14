@@ -91,6 +91,8 @@ _list_data_cb(void *data, int type EINA_UNUSED, void *event_info)
     }
 
     total += url_data->size;
+
+    return EINA_TRUE;
 }
 
 static Eina_Bool
@@ -109,6 +111,8 @@ _list_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     ecore_con_url_free(handle->h);
     
     populate_list();
+
+    return EINA_TRUE;
 }
 
 Eina_Bool
@@ -126,6 +130,8 @@ get_distribution_list(void)
     handler->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _list_complete_cb, handler);
 
     ecore_con_url_get(handler->h);
+
+    return EINA_TRUE;
 }
 
 
@@ -139,7 +145,7 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
     Ecore_Con_Event_Url_Data *url_data = event_info;
     SHA256_Update(&h->ctx, url_data->data, url_data->size);
     int chunk = url_data->size;
-    char *pos = url_data->data;
+    unsigned char *pos = url_data->data;
 
     while (chunk) {
         ssize_t count =  write(h->fd, pos, chunk);

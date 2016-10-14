@@ -213,17 +213,22 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
 #if defined(__linux__) || defined(__OpenBSD__)
+   // The ecore_con engine (better)
    ecore_www_file_save(remote_url, local_url);
 
    return; 
-#endif 
-   /* CANNOT REACH: this is the fallback engine */ 
+#else
+   /* XXX: The fallback engine!  
+    *
+    * FreeBSD has a wee issue for now use this 
+    * Also this should work everywhere else */
 
    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
    //elm_progressbar_pulse(ui->progressbar, EINA_TRUE);
 
    thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
                                         NULL, EINA_FALSE);
+#endif 
 }
 
 
