@@ -73,7 +73,7 @@ typedef struct _handler_t handler_t;
 struct _handler_t {
     SHA256_CTX ctx;
     int fd;
-    Ecore_Con_Url *h;
+    Ecore_Con_Url *conn;
     Ecore_Event_Handler *add;
     Ecore_Event_Handler *complete;
 };
@@ -108,7 +108,7 @@ _list_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
 
     ecore_event_handler_del(handle->add);
     ecore_event_handler_del(handle->complete);
-    ecore_con_url_free(handle->h);
+    ecore_con_url_free(handle->conn);
     
     populate_list();
 
@@ -124,12 +124,12 @@ get_distribution_list(void)
         ecore_con_url_pipeline_set(EINA_TRUE);
     }
 
-    handler->h = ecore_con_url_new("http://haxlab.org/list.txt");
+    handler->conn = ecore_con_url_new("http://haxlab.org/list.txt");
 
     handler->add = ecore_event_handler_add(ECORE_CON_EVENT_URL_DATA, _list_data_cb, NULL);
     handler->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _list_complete_cb, handler);
 
-    ecore_con_url_get(handler->h);
+    ecore_con_url_get(handler->conn);
 
     return EINA_TRUE;
 }
@@ -187,7 +187,7 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
 
     elm_object_text_set(ui->sha256_label, sha256);
 
-    ecore_con_url_free(h->h);
+    ecore_con_url_free(h->conn);
  
     elm_progressbar_pulse(ui->progressbar, EINA_FALSE);
     elm_object_disabled_set(ui->bt_ok, EINA_FALSE);
@@ -226,8 +226,8 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
 
     SHA256_Init(&h->ctx);
 
-    h->h = ecore_con_url_new(remote_url);
-    if (!h->h) {
+    h->conn = ecore_con_url_new(remote_url);
+    if (!h->conn) {
         return;
     }
 
@@ -241,7 +241,7 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
     h->add = ecore_event_handler_add(ECORE_CON_EVENT_URL_DATA, _download_data_cb, h);
     h->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _download_complete_cb, h);
 
-    ecore_con_url_get(h->h); 
+    ecore_con_url_get(h->conn); 
     
     elm_progressbar_pulse(ui->progressbar, EINA_TRUE);
     elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
