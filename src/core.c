@@ -266,7 +266,7 @@ Error(char *fmt, ...)
 }
 
 char *
-from_url_host(char *host)
+host_from_url(char *host)
 {
     char *addr = strdup(host);
     char *end; 
@@ -291,7 +291,7 @@ from_url_host(char *host)
 }
 
 char *
-from_url_path(char *path)
+path_from_url(char *path)
 {
     if (path == NULL) return (NULL);
 
@@ -483,8 +483,8 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
 
     char *outfile = (char *) local_url;
 
-    const char *address = from_url_host(infile);
-    const char *path = from_url_path(infile);
+    const char *address = host_from_url(infile);
+    const char *path = path_from_url(infile);
 
     int in_fd, out_fd, sock;
     
