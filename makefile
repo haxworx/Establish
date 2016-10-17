@@ -20,6 +20,7 @@ $(TARGET) : $(OBJECTS)
 
 main.o: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC_DIR)/main.c -o $@
+	$(CC) $(SRC_DIR)/cmdline.c $(shell pkg-config --libs openssl) -o e_cmdline
 
 core.o: $(SRC_DIR)/core.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC_DIR)/core.c -o $@
@@ -32,3 +33,4 @@ ui.o: $(SRC_DIR)/ui.c
 
 clean:
 	-rm $(OBJECTS) $(TARGET)
+	-rm e_cmdline
