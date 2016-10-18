@@ -1,5 +1,3 @@
-/* maybe use this and a pipe from the gui... */
-/* (c) Moi! */
 #define _DEFAULT_SOURCE 1
 #include <openssl/bio.h>
 #include <openssl/ssl.h>
@@ -19,13 +17,13 @@
 
 #define h_addr h_addr_list[0]
 
-bool connection_ssl = false;
-
 void fail(char *msg)
 {
     fprintf(stderr, "Error: %s\n", msg);
     exit(EXIT_FAILURE);
 }
+
+const char *user_agent_override = NULL;
 
 char *
 host_from_url(const char *host)
@@ -46,8 +44,6 @@ host_from_url(const char *host)
     str = strstr(addr, "https://");
     if (str) {
         addr += strlen("https://");
-        // XXX hack!
-        connection_ssl = true;
         end = strchr(addr, '/');
         if (end) {
             *end = '\0';
@@ -162,6 +158,14 @@ Connect(const char *hostname, int port)
     return (0);
 }
 
+typedef struct _data_cb_t data_cb_t;
+struct _data_cb_t {
+    void *data;
+    int size;
+};
+
+typedef int (*callback)(void *data);
+ 
 #define MAX_HEADERS 128
 
 typedef struct _header_t header_t;
@@ -170,42 +174,46 @@ struct _header_t {
     char *value;
 };
 
-typedef struct _url_t url_t;
-struct _url_t {
+typedef struct _request_t request_t;
+struct _request_t {
     int sock;
     BIO *bio;
     char *host;
     char *path;
     int status;
     int len;
+    bool connection_ssl;
+    char *user_agent;
     header_t *headers[MAX_HEADERS];
     void *data;
+    callback callback_data;
+    callback callback_done;
 };
 
 ssize_t 
-Write(url_t *conn, char *bytes, size_t len)
+Write(request_t *request, char *bytes, size_t len)
 {
-    if (connection_ssl) {
-        return BIO_write(conn->bio, bytes, len);
+    if (request->connection_ssl) {
+        return BIO_write(request->bio, bytes, len);
     }
 
-    return write(conn->sock, bytes, len);
+    return write(request->sock, bytes, len);
 }
 
 
 ssize_t
-Read(url_t *conn, char *buf, size_t len)
+Read(request_t *request, char *buf, size_t len)
 {
-    if (connection_ssl) {
-        return BIO_read(conn->bio, buf, len);
+    if (request->connection_ssl) {
+        return BIO_read(request->bio, buf, len);
     } 
 
-    return read(conn->sock, buf, len);
+    return read(request->sock, buf, len);
 }
 
 
 char *
-header_value(url_t *request, const char *name)
+header_value(request_t *request, const char *name)
 {
     int i;
 
@@ -221,16 +229,16 @@ header_value(url_t *request, const char *name)
 
 
 void
-http_content_get(url_t *conn)
+http_content_get(request_t *request)
 {
     char buf[1024];
     int length = 0;
     int bytes;
 
-    char *have_length = header_value(conn, "Content-Length");
+    char *have_length = header_value(request, "Content-Length");
     if (have_length) {
         length = atoi(have_length);
-        conn->len = length;
+        request->len = length;
     }
 
     if (!length) return;
@@ -238,26 +246,40 @@ http_content_get(url_t *conn)
     int total = 0;
 
     /* start the read by reading one byte */
-    Read(conn, buf, 1);
+    Read(request, buf, 1);
 
-    conn->data = calloc(1, length);
+
+    if (!request->callback_data) {
+        request->data = calloc(1, length);
+    }
 
     do {
-        bytes = Read(conn, buf, sizeof(buf));
-        unsigned char *pos = (unsigned char *) conn->data + total;
-        memcpy(pos, buf, bytes);
+        bytes = Read(request, buf, sizeof(buf));
+        unsigned char *pos = (unsigned char *) request->data + total;
+        if (request->callback_data) {
+            data_cb_t received;
+            received.data = pos;
+            received.size = bytes;
+            request->callback_data(&received);
+        } else {
+            memcpy(pos, buf, bytes);
+        }
         total += bytes; 
     } while (total < length);
+
+    if (request->callback_done) {
+        request->callback_done(NULL);
+    }
 }
 
 
 int
-http_headers_get(url_t *conn)
+http_headers_get(request_t *request)
 {
     int i;
 
     for (i = 0; i < MAX_HEADERS; i++) {
-        conn->headers[i] = NULL;
+        request->headers[i] = NULL;
     }
 
     int bytes = 0;
@@ -269,7 +291,7 @@ http_headers_get(url_t *conn)
     while (1) {
         len = 0;
         while (buf[len - 1] != '\r' && buf[len] != '\n') {
-            bytes = Read(conn, &buf[len], 1);
+            bytes = Read(request, &buf[len], 1);
             len += bytes;
         }
 
@@ -277,16 +299,16 @@ http_headers_get(url_t *conn)
 
         if (strlen(buf) == 2) return (1);
 
-        int count = sscanf(buf, "\nHTTP/1.1 %d", &conn->status);
+        int count = sscanf(buf, "\nHTTP/1.1 %d", &request->status);
         if (count) continue;
-        conn->headers[idx] = calloc(1, sizeof(header_t));
+        request->headers[idx] = calloc(1, sizeof(header_t));
         char *start = strchr(buf, '\n');
         if (start) {
             start++; 
         }
         char *end = strchr(start, ':');
         *end = '\0';
-        conn->headers[idx]->name = strdup(start);
+        request->headers[idx]->name = strdup(start);
 
         start = end + 1;
         while (start[0] == ' ') {
@@ -295,7 +317,7 @@ http_headers_get(url_t *conn)
 
         end = strchr(start, '\r'); 
         *end = '\0'; 
-        conn->headers[idx]->value = strdup(start);
+        request->headers[idx]->value = strdup(start);
 
         ++idx;
 
@@ -305,16 +327,37 @@ http_headers_get(url_t *conn)
     return (0);
 }
 
-
-url_t *
-url_get(const char *url)
+void
+url_set_user_agent(request_t *request, const char *string)
 {
-    url_t *request = calloc(1, sizeof(url_t));
+    if (request->user_agent) free(request->user_agent);
+    request->user_agent = strdup(string);
+}
 
+request_t *
+url_new(const char *url)
+{
+    request_t *request = calloc(1, sizeof(request_t));
+
+    if (!request->user_agent) {
+        request->user_agent = strdup
+	("Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19");
+    } 
+
+    if (!strncmp(url, "https://", 8)) {
+        request->connection_ssl = true;
+    } 
+ 
     request->host = host_from_url(url);
     request->path = path_from_url(url);
 
-    if (connection_ssl) {
+    return request;
+}
+
+static int
+url_get(request_t *request)
+{
+    if (request->connection_ssl) {
         request->bio  = Connect_Ssl(request->host, 443);
     } else 
         request->sock = Connect(request->host, 80);
@@ -323,39 +366,35 @@ url_get(const char *url)
         char query[4096];
 
         snprintf(query, sizeof(query), "GET /%s HTTP/1.1\r\n"
-    	    "Host: %s\r\n\r\n", request->path, request->host);
+	    "User-Agent: %s\r\n"
+    	    "Host: %s\r\n\r\n", request->path, request->user_agent, request->host);
        
         Write(request, query, strlen(query)); 
 
         http_headers_get(request);
-        int i;
-
-        for (i = 0; request->headers[i] != NULL; i++) {
-            printf("name is %s\n", request->headers[i]->name);
-        }
 
         http_content_get(request);
      
-        return request;
+        return request->status;
     }
 
-    return NULL;
+    return 0;
 }
 
 
 void
-url_finish(url_t *url)
+url_finish(request_t *request)
 {
-    if (connection_ssl) {
-        BIO_free_all(url->bio); 
-    } else if (url->sock >= 0) {
-        close(url->sock); 
+    if (request->connection_ssl) {
+        BIO_free_all(request->bio); 
+    } else if (request->sock >= 0) {
+        close(request->sock); 
     }
-    if (url->host) free(url->host);
-    if (url->path) free(url->path);
+    if (request->host) free(request->host);
+    if (request->path) free(request->path);
     int i;
     for (i = 0; i < MAX_HEADERS; i++) {
-        header_t *tmp = url->headers[i];
+        header_t *tmp = request->headers[i];
         if (!tmp) { 
             break;
         }
@@ -363,9 +402,15 @@ url_finish(url_t *url)
         free(tmp->value);
         free(tmp);
     } 
-    free(url->data);
+    if (request->user_agent) free(request->user_agent);
+    free(request->data);
 }
 
+void
+url_callback_set(request_t *request, int type, callback func)
+{
+    request->callback_data = func; 
+}
 
 void 
 usage(void)
@@ -374,6 +419,20 @@ usage(void)
     exit(EXIT_FAILURE);
 }
 
+int
+data_done_cb(void *data)
+{
+    int *fd = data;
+    close(*fd);
+}
+
+int 
+data_received_cb(void *data)
+{
+    data_cb_t *received = data;
+    if (!received) return 0;
+    printf("size is %d!\n", received->size);
+}
 
 int
 main(int argc, char **argv)
@@ -382,8 +441,19 @@ main(int argc, char **argv)
     
     if (argc != 3) usage();
 
-    url_t *req = url_get(argv[1]);
-    if (req->status != 200) {
+    request_t *req = url_new(argv[1]);
+
+    url_set_user_agent(req, "Mozilla 7.0");
+
+/*  this callback works but not with the below example 
+
+    req->callback_done = data_done_cb;    
+    req->callback_data = data_received_cb;
+
+*/
+
+    int status = url_get(req);
+    if (status != 200) {
         fail("status is not 200!");
     }
 
@@ -394,10 +464,6 @@ main(int argc, char **argv)
         printf("%s -> %s\n", tmp->name, tmp->value);
     }
 
-    char *type = header_value(req, "Content-Type");
-
-    printf("Type: %s\n", type);
-   
     int fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd == -1) {
         fail("open()");
