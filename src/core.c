@@ -251,6 +251,10 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
 
 int fd;
 SHA256_CTX ctx;
+int total_length;
+int downloaded;
+
+double percent;
 
 int data_done_cb(void *data)
 {
@@ -262,6 +266,14 @@ data_received_cb(void *data)
 {
     data_cb_t *received = data;
     if (!received) return 0;
+
+    downloaded += received->size;
+    int current = downloaded / percent;
+    int *tmp = malloc(sizeof(double));
+    *tmp = (int) current;
+
+    ecore_thread_feedback(thread, tmp);
+    
     SHA256_Update(&ctx, received->data, received->size);
     return write(fd, received->data, received->size);
 }
@@ -275,9 +287,22 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     fd = -1;
 
     fd = open(local_uri, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        fail("unable to write!");
+    }
 
     req->callback_set(req->self, CALLBACK_DATA, data_received_cb);
     req->callback_set(req->self, CALLBACK_DONE, data_done_cb);
+
+    req->headers_get(req->self);
+
+    const char *length = req->header_get(req->self, "Content-Length");
+    if (length) {
+        total_length = atoi(length);
+    }
+
+    downloaded = 0;
+    percent = total_length / 10000;
 
     int status = req->get(req->self);
 
@@ -298,6 +323,8 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     }
 
     req->finish(req->self);
+
+    sync(); sync();
 
     return strdup(sha256sum);
 }
