@@ -25,9 +25,6 @@
 #include <Ecore.h>
 #include <Ecore_Con.h>
 
-#define h_addr h_addr_list[0]
-
-char *strdup(const char *s);
 
 void download_distribution_list(void);
 

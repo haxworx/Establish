@@ -202,10 +202,9 @@ skip:
 
     if (disk_count) {
         qsort(storage, disk_count, sizeof(char *), _string_cmp);
-    }
-
-    if (ui) {
-        update_combobox_storage();
+        if (ui) {
+            update_combobox_storage();
+        }
     }
 
     return (disk_count);
