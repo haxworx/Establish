@@ -33,7 +33,8 @@
 
 extern Ui_Main_Contents *ui;
 
-void _clear_storage(void)
+static void
+_clear_storage(void)
 {
     int i;
 
@@ -45,7 +46,8 @@ void _clear_storage(void)
     }
 }
 
-static int _string_cmp(const void *a, const void *b)
+static int 
+_string_cmp(const void *a, const void *b)
 {
     const char *s1 = *(const char **) a;
     const char *s2 = *(const char **) b;
@@ -53,10 +55,12 @@ static int _string_cmp(const void *a, const void *b)
     return strcmp(s1, s2);
 }
 
-int system_get_disks(void)
+int 
+system_get_disks(void)
 {
     int disk_count = 0;
     char buf[256];
+    bool is_first = true;
     char *drives;
     size_t len;
 
@@ -90,8 +94,9 @@ int system_get_disks(void)
       
         *end = '\0';
  
-        if (!strncmp(s, "cd", 2)) {
-            goto skip;
+	if (is_first || !strncmp(s, "cd", 2)) {
+            is_first = false;
+	    goto skip;
         }
 
         if (s[0] == ',') {
@@ -131,10 +136,11 @@ skip:
 	if (end)  
 	*end = '\0';
 
-	if (!strncmp(s, "cd", 2)) {
-            goto skip;
-        }
-	
+        if (is_first || !strncmp(s, "cd", 2)) {
+            is_first = false;
+	    goto skip;
+	}
+
 	snprintf(buf, sizeof(buf), "/dev/%s", s);
 	storage[disk_count++] = strdup(buf);
 skip:
