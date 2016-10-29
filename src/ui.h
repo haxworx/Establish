@@ -38,7 +38,4 @@ Ui_Main_Contents *elm_window_create(void);
 void update_combobox_storage(void);
 void error_popup(Evas_Object *win);
 
-
-static distro_t distrbibutions[];
-
 #endif
