@@ -34,6 +34,17 @@
 
 extern Ui_Main_Contents *ui;
 
+typedef struct _handler_t handler_t;
+struct _handler_t {
+    SHA256_CTX ctx;
+    char buffer[65535];
+    int total;
+    int fd;
+    Ecore_Con_Url *conn;
+    Ecore_Event_Handler *add;
+    Ecore_Event_Handler *complete;
+};
+
 void
 parse_distribution_list(char *data)
 {
@@ -70,25 +81,17 @@ parse_distribution_list(char *data)
     ui = elm_window_create();
 }
 
-typedef struct _handler_t handler_t;
-struct _handler_t {
-    SHA256_CTX ctx;
-    char buffer[65535];
-    int total;
-    int fd;
-    Ecore_Con_Url *conn;
-    Ecore_Event_Handler *add;
-    Ecore_Event_Handler *complete;
-};
-
 static Eina_Bool
 _list_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 {
-    Ecore_Con_Event_Url_Data *url_data = event_info;
+    int i;
     handler_t *handle = data;
+    Ecore_Con_Event_Url_Data *url_data = event_info;
     char *buf = &handle->buffer[handle->total];
 
-    int i;
+    if ((handle->total + url_data->size) > sizeof(handle->buffer)) {
+        fail("Received too much data!");
+    }
 
     for (i = 0; i < url_data->size; i++) {
         buf[i] = url_data->data[i];
@@ -122,18 +125,18 @@ _list_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
 Eina_Bool
 get_distribution_list(void)
 {
-    handler_t *handler = calloc(1, sizeof(*handler));
+    handler_t *handle = calloc(1, sizeof(*handle));
 
     if (!ecore_con_url_pipeline_get()) {
         ecore_con_url_pipeline_set(EINA_TRUE);
     }
 
-    handler->conn = ecore_con_url_new("http://haxlab.org/list.txt");
+    handle->conn = ecore_con_url_new("http://haxlab.org/list.txt");
 
-    handler->add = ecore_event_handler_add(ECORE_CON_EVENT_URL_DATA, _list_data_cb, handler);
-    handler->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _list_complete_cb, handler);
+    handle->add = ecore_event_handler_add(ECORE_CON_EVENT_URL_DATA, _list_data_cb, handle);
+    handle->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _list_complete_cb, handle);
 
-    ecore_con_url_get(handler->conn);
+    ecore_con_url_get(handle->conn);
 
     return (EINA_TRUE);
 }
@@ -167,23 +170,18 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 static Eina_Bool
 _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
 {
+    unsigned char result[SHA256_DIGEST_LENGTH] = { 0 };
+    char sha256[2 * SHA256_DIGEST_LENGTH + 1] = { 0 };
+    int i = 0, j = 0;
     handler_t *h = data;
-
     Ecore_Con_Event_Url_Complete *url_complete = event_info;
 
     close(h->fd);
 
     sync();
-    sync();
 
-    unsigned char result[SHA256_DIGEST_LENGTH] = { 0 };
     SHA256_Final(result, &h->ctx);
 
-    int i;
-
-    char sha256[2 * SHA256_DIGEST_LENGTH + 1] = { 0 };
-
-    int j = 0;
     for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         snprintf(&sha256[j], sizeof(sha256), "%02x", (unsigned int) result[i]);
         j += 2;
@@ -208,6 +206,7 @@ static Eina_Bool
 _download_progress_cb(void *data EINA_UNUSED, int type EINA_UNUSED, void *event_info)
 {
     Ecore_Con_Event_Url_Progress *url_progress = event_info;
+
     if (url_progress->down.now == 0 || url_progress->down.total == 0) {
         return (EINA_TRUE);
     }
@@ -249,39 +248,45 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
     elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
 }
 
+/* This is a fallback engine */
+
 int fd;
 SHA256_CTX ctx;
 int total_length;
-int downloaded;
-
+int bytes_so_far;
 double percent;
 
-int data_done_cb(void *data)
+static int 
+data_done_cb(void *data)
 {
     return close(fd);
 }
 
-int
+static int
 data_received_cb(void *data)
 {
     data_cb_t *received = data;
     if (!received) return 0;
 
-    downloaded += received->size;
-    int current = downloaded / percent;
+    bytes_so_far += received->size;
+    int current = bytes_so_far / percent;
     int *tmp = malloc(sizeof(double));
     *tmp = (int) current;
 
     ecore_thread_feedback(thread, tmp);
     
     SHA256_Update(&ctx, received->data, received->size);
+
     return write(fd, received->data, received->size);
 }
 
 char *
 www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_uri)
 {
+    int i = 0, j = 0;
     url_t *req = url_new(remote_url);
+
+    bytes_so_far = 0;
 
     SHA256_Init(&ctx);
     fd = -1;
@@ -299,13 +304,14 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     const char *length = req->header_get(req->self, "Content-Length");
     if (length) {
         total_length = atoi(length);
+	if (!total_length) {
+            fail("Unabled to determine Content-Length!");
+        }
     }
-
-    downloaded = 0;
+    
     percent = total_length / 10000;
 
     int status = req->get(req->self);
-
     if (status != 200) {
         fail("status is not 200!");
     }
@@ -315,8 +321,6 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
 
     char sha256sum[2 * SHA256_DIGEST_LENGTH + 1] = { 0 };
 
-    int i, j = 0;
-
     for (i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         snprintf(&sha256sum[j], sizeof(sha256sum), "%02x", (unsigned int) result[i]);
         j += 2;
@@ -324,10 +328,8 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
 
     req->finish(req->self);
 
-    sync(); sync();
+    sync();
 
     return strdup(sha256sum);
 }
-
-
 
