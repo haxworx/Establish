@@ -3,6 +3,12 @@
 
 #define _DEFAULT_SOURCE 1
 
+#include <openssl/bio.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <Eina.h>
+#include <Ecore.h>
+#include <Ecore_Con.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,22 +24,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <openssl/bio.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <Eina.h>
-#include <Ecore.h>
-#include <Ecore_Con.h>
-
-
-void download_distribution_list(void);
-
-/* fallback implementation */
-char *www_file_save(Ecore_Thread *, const char *, const char *);
+/* Change this to host your own list of images on 
+ * another server */
+#define REMOTE_LIST_URL "http://haxlab.org/list.txt"
 
 Eina_Bool get_distribution_list(void);
+
 /* ecore implementation */
 void ecore_www_file_save(const char *, const char *);
 
+/* fallback implementation */
+char *www_file_save(Ecore_Thread *, const char *, const char *);
 
 #endif

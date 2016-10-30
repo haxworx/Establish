@@ -45,6 +45,10 @@ struct _handler_t {
     Ecore_Event_Handler *complete;
 };
 
+/* This section deals with the remote list of
+ * URLs
+ */
+
 void
 parse_distribution_list(char *data)
 {
@@ -131,7 +135,7 @@ get_distribution_list(void)
         ecore_con_url_pipeline_set(EINA_TRUE);
     }
 
-    handle->conn = ecore_con_url_new("http://haxlab.org/list.txt");
+    handle->conn = ecore_con_url_new(REMOTE_LIST_URL);
 
     handle->add = ecore_event_handler_add(ECORE_CON_EVENT_URL_DATA, _list_data_cb, handle);
     handle->complete = ecore_event_handler_add(ECORE_CON_EVENT_URL_COMPLETE, _list_complete_cb, handle);
