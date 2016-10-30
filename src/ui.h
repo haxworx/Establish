@@ -23,6 +23,7 @@ struct _Ui_Main_Contents {
     Evas_Object *table;
     Evas_Object *bt_ok;
     Evas_Object *bt_cancel;
+    Evas_Object *bt_about;
     char *sha256sum;
 };
 

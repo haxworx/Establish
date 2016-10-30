@@ -263,10 +263,11 @@ Ui_Main_Contents *elm_window_create(void)
     for (i = 0; distributions[i] != NULL; i++)
         elm_genlist_item_append(ui->combobox_source, itc, (void *) (uintptr_t) i,
                 NULL, ELM_GENLIST_ITEM_NONE, NULL, (void *)(uintptr_t) i);
-
     evas_object_smart_callback_add(ui->combobox_source, "item,pressed",
                                      _combobox_source_item_pressed_cb, NULL);
 
+    elm_genlist_item_selected_set(ui->combobox_source, EINA_TRUE);
+    //elm_combobox_hover_begin(ui->combobox_source);
     evas_object_show(ui->combobox_source);
 
     ui->combobox_dest = elm_combobox_add(ui->win);
@@ -323,17 +324,21 @@ Ui_Main_Contents *elm_window_create(void)
 
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
 
-    /*
-     *  this is confusing...!!!
     ui->bt_cancel = elm_button_add(ui->win);
-    elm_object_text_set(ui->bt_cancel, "Cancel");
+    elm_object_text_set(ui->bt_cancel, "Exit");
     evas_object_show(ui->bt_cancel);
     elm_table_pack(ui->table, ui->bt_cancel, 1, 0, 1, 1);
 
     evas_object_smart_callback_add(ui->bt_cancel, "clicked", _bt_cancel_clicked_cb, NULL);
-    */
 
-    evas_object_resize(ui->win, 400,100);
+    /*
+    ui->bt_about = elm_button_add(ui->win);
+    elm_object_text_set(ui->bt_about, "About");
+    evas_object_show(ui->bt_about);
+    elm_table_pack(ui->table, ui->bt_about, 2, 0, 1, 1);
+
+*/
+    evas_object_resize(ui->win, 368,150);
 
     evas_object_show(ui->win);
 
@@ -341,5 +346,4 @@ Ui_Main_Contents *elm_window_create(void)
     
     return ui;
 }
-
 
