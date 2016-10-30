@@ -27,7 +27,12 @@ FIXME (Linux):
   Basically don't mess up! It *should* do what you ask it to do
   for now!
 
+FIXME (FreeBSD):
+
+* Why does it need to use the fallback code???
+
 TODO:
 
 * Maybe a good idea to move the HTTP/SSL stuff out of the GUI
   binary and call that??? 
+
