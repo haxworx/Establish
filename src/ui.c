@@ -253,7 +253,7 @@ Ui_Main_Contents *elm_window_create(void)
     ui->combobox_source = elm_combobox_add(ui->win);
     evas_object_size_hint_weight_set(ui->combobox_source, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_source, EVAS_HINT_FILL, 0);
-    elm_object_part_text_set(ui->combobox_source, "guide", "select...");
+    elm_object_part_text_set(ui->combobox_source, "guide", "Select an operating system...");
     elm_box_pack_end(ui->box, ui->combobox_source);
 
     Elm_Genlist_Item_Class *itc = elm_genlist_item_class_new();
@@ -273,7 +273,7 @@ Ui_Main_Contents *elm_window_create(void)
     ui->combobox_dest = elm_combobox_add(ui->win);
     evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_dest, EVAS_HINT_FILL, 0);
-    elm_object_part_text_set(ui->combobox_dest, "guide", "destination...");
+    elm_object_part_text_set(ui->combobox_dest, "guide", "Select install destination...");
     elm_box_pack_end(ui->box, ui->combobox_dest);
     evas_object_show(ui->combobox_dest);
 
