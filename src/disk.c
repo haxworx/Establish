@@ -153,7 +153,7 @@ skip:
 
     free(drives);
 
-#else 
+#elif defined(__linux__) // This is gross!
     Eina_List *devices = NULL, *parents = NULL, *blacklist = NULL;
     Eina_List *l;
     char *data;
@@ -203,6 +203,8 @@ skip:
     eina_list_free(blacklist);
 
     eeze_shutdown();
+#else
+#error "Unsupported Operating System"
 #endif   
     storage[disk_count] = NULL;
 
