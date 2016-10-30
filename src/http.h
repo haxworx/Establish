@@ -74,53 +74,21 @@ struct _url_t {
 
 /* Public API */
 
-url_t *
-url_new(const char *url);
-
-void
-url_user_agent_set(url_t *url, const char *string);
-
-void
-user_agent_set(void *self, const char *string);
-
-int
-url_get(url_t *url);
-
-int 
-get(void *self);
-
-const char *
-url_header_get(url_t *url, const char *name);
-
-const char *
-header_get(void *self, const char *name);
-
-void
-url_finish(url_t *url);
-
-void
-finish(void *self);
-
-void
-url_headers_get(url_t *url);
-
-void
-headers_get(void *self);
-
-int
-url_fd_write_set(url_t *url, int fd);
-
-int
-fd_write_set(void *self, int fd);
-
-
-void
-url_callback_set(url_t *url, int type, callback func);
-
-void
-callback_set(void *self, int type, callback func);
-
-void 
-fail(char *msg);
+url_t *url_new(const char *url);
+int url_get(url_t *url);
+int get(void *self);
+void url_headers_get(url_t *url);
+void headers_get(void *self);
+const char *url_header_get(url_t *url, const char *name);
+const char *header_get(void *self, const char *name);
+void url_user_agent_set(url_t *url, const char *string);
+void user_agent_set(void *self, const char *string);
+void url_finish(url_t *url);
+void finish(void *self);
+int url_fd_write_set(url_t *url, int fd);
+int fd_write_set(void *self, int fd);
+void url_callback_set(url_t *url, int type, callback func);
+void callback_set(void *self, int type, callback func);
+void fail(char *msg);
 
 #endif
