@@ -8,6 +8,4 @@ NetBSD v7.0 (amd64)=http://mirror.planetunix.net/pub/NetBSD/iso/7.0/NetBSD-7.0-a
 OpenBSD v6.0 (i386)=http://mirror.ox.ac.uk/pub/OpenBSD/6.0/i386/install60.fs 
 OpenBSD v6.0 (amd64)=http://mirror.ox.ac.uk/pub/OpenBSD/6.0/amd64/install60.fs
 
-
-
 # This is an example. Place this file on a web server and update as needed...
