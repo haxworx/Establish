@@ -66,7 +66,7 @@ system_get_disks(void)
 
     _clear_storage();
 
-#if defined(__OpenBSD__)
+#if defined(__OpenBSD__) || defined(__NetBSD__)
     static const mib[] = { CTL_HW, HW_DISKNAMES };
     static const unsigned int miblen = 2;
 
@@ -115,7 +115,7 @@ skip:
 
     free(drives);
 
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
 
     if ((sysctlbyname("kern.disks", NULL, &len, NULL, 0)) < 0) {
         return (0);
@@ -136,7 +136,7 @@ skip:
 	if (end)  
 	*end = '\0';
 
-        if (is_first || !strncmp(s, "cd", 2)) {
+        if (is_first || !strncmp(s, "cd", 2) || !strncmp(s, "vn", 2)) {
             is_first = false;
 	    goto skip;
 	}
