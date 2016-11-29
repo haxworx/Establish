@@ -137,7 +137,7 @@ skip:
 	*end = '\0';
 
         if (is_first || !strncmp(s, "cd", 2) || !strncmp(s, "vn", 2) || !strncmp(s, "md", 2)) {
-            is_first = false
+            is_first = false;
 	    goto skip;
 	}
 
