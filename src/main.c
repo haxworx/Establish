@@ -46,6 +46,17 @@ system_check_changes(void *data)
     return ECORE_CALLBACK_RENEW;
 }
 
+static
+_warning_to_user(void)
+{
+    printf("WARNING!!!\n");
+    printf("Please check before you write to disk.\n");
+    printf("It is currently possible to break your primary disk!\n");
+    printf("The program tries to prevent providing dangerous\n");
+    printf("choices but this doesn't always works!\n");
+    printf ("If you are unsure CHECK before you write!!!\n");
+}
+
 
 EAPI_MAIN int
 elm_main(int argc, char **argv)
@@ -62,6 +73,8 @@ elm_main(int argc, char **argv)
     }
 
     get_distribution_list();
+
+    _warning_to_user();
 
     ecore_main_loop_begin();
     
