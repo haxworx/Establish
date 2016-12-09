@@ -289,15 +289,19 @@ Ui_Main_Contents *elm_window_create(void)
     Evas_Object *popup = elm_popup_add(ui->win);
     elm_popup_orient_set(popup, ELM_POPUP_ORIENT_CENTER);
     elm_popup_scrollable_set(popup, EINA_TRUE);
-    evas_object_resize(popup, 400, 400);
+    evas_object_resize(popup, 540, 400);
     evas_object_size_hint_weight_set(popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     evas_object_show(popup);
    
     ui->table = elm_table_add(popup);
-    //evas_object_size_hint_weight_set(ui->table, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     ui->box = elm_box_add(popup);
-    evas_object_size_hint_weight_set(ui->box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+
+    const char *message = "<font_size=18 font_weidth=semibold>Establish</font>";
+    ui->label = elm_label_add(popup);
+    elm_object_text_set(ui->label, message);
+    evas_object_text_style_set(ui->label, EVAS_TEXT_STYLE_GLOW);
+    evas_object_show(ui->label);
+    elm_box_pack_end(ui->box, ui->label);
 
     ui->combobox_source = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_source, EVAS_HINT_EXPAND, 0);
@@ -393,7 +397,6 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_show(ui->ee_effect);
     evas_object_pass_events_set(ui->ee_effect, EINA_TRUE);
 
-    evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
 
     elm_box_pack_end(ui->box, ui->table);
 
@@ -401,13 +404,25 @@ Ui_Main_Contents *elm_window_create(void)
     elm_table_pack(table, ui->box, 0, 0, 1, 1);
     elm_table_pack(table, ui->table, 0, 1, 1, 1);
     elm_object_content_set(popup, table);
+    evas_object_size_hint_weight_set(table, EVAS_HINT_EXPAND, 0.5);
+    evas_object_size_hint_align_set(table, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
-    evas_object_show(ui->box);
-    evas_object_show(ui->table);
+ 
     evas_object_show(table);
-    evas_object_resize(popup, 400, 400);
-    evas_object_show(popup);
+
+    
+    evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
     evas_object_show(ui->win);
+    evas_object_resize(popup, 600, 600);
+    evas_object_show(popup);
+   
+    evas_object_size_hint_weight_set(ui->table, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_align_set(ui->table, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_show(ui->table);
+
+    evas_object_size_hint_weight_set(ui->box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_show(ui->box);
 
     evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _resize_cb, NULL);
     evas_object_smart_callback_add(ui->win, "delete,request", win_del, NULL);

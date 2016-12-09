@@ -17,6 +17,7 @@ struct _Ui_Main_Contents {
     Evas_Object *win;
     Evas_Object *icon;
     Evas_Object *box;
+    Evas_Object *label;
     Evas_Object *combobox_source;
     Evas_Object *combobox_dest;
     Evas_Object *sha256_label;
