@@ -34,8 +34,8 @@
 
 extern Ui_Main_Contents *ui;
 
-#define WIN_WIDTH 400
-#define WIN_HEIGHT 150
+#define WIN_WIDTH 360
+#define WIN_HEIGHT 360 
 
 static char *
 gl_text_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
@@ -286,16 +286,25 @@ Ui_Main_Contents *elm_window_create(void)
     elm_win_icon_object_set(ui->win, ui->icon);
     evas_object_show(ui->icon);
 
-    ui->box = elm_box_add(ui->win);
+    Evas_Object *popup = elm_popup_add(ui->win);
+    elm_popup_orient_set(popup, ELM_POPUP_ORIENT_CENTER);
+    elm_popup_scrollable_set(popup, EINA_TRUE);
+    evas_object_resize(popup, 400, 400);
+    evas_object_size_hint_weight_set(popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    evas_object_show(popup);
+   
+    ui->table = elm_table_add(popup);
+    //evas_object_size_hint_weight_set(ui->table, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
+    ui->box = elm_box_add(popup);
     evas_object_size_hint_weight_set(ui->box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(ui->win, ui->box);
-    evas_object_show(ui->box);
+    evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, EVAS_HINT_FILL);
 
-    ui->combobox_source = elm_combobox_add(ui->win);
+    ui->combobox_source = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_source, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_source, EVAS_HINT_FILL, 0);
     elm_object_part_text_set(ui->combobox_source, "guide", "Select an operating system...");
     elm_box_pack_end(ui->box, ui->combobox_source);
+    evas_object_show(ui->combobox_source);
 
     Elm_Genlist_Item_Class *itc = elm_genlist_item_class_new();
     itc->item_style = "default";
@@ -308,10 +317,8 @@ Ui_Main_Contents *elm_window_create(void)
                                      _combobox_source_item_pressed_cb, NULL);
 
     elm_genlist_item_selected_set(ui->combobox_source, EINA_TRUE);
-    //elm_combobox_hover_begin(ui->combobox_source);
-    evas_object_show(ui->combobox_source);
 
-    ui->combobox_dest = elm_combobox_add(ui->win);
+    ui->combobox_dest = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_dest, EVAS_HINT_FILL, 0);
     elm_object_part_text_set(ui->combobox_dest, "guide", "Select install destination...");
@@ -330,7 +337,7 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_smart_callback_add(ui->combobox_dest, "item,pressed",
                                   _combobox_storage_item_pressed_cb, NULL);
 
-    ui->progressbar= elm_progressbar_add(ui->win);
+    ui->progressbar= elm_progressbar_add(popup);
     evas_object_size_hint_align_set(ui->progressbar, EVAS_HINT_FILL, 0.5);
     evas_object_size_hint_weight_set(ui->progressbar, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     //elm_progressbar_pulse_set(ui->progressbar, EINA_TRUE);
@@ -339,7 +346,7 @@ Ui_Main_Contents *elm_window_create(void)
     elm_box_pack_end(ui->box, ui->progressbar);
     evas_object_show(ui->progressbar);
 
-    ui->sha256_label = elm_entry_add(ui->win);
+    ui->sha256_label = elm_entry_add(popup);
     elm_entry_single_line_set(ui->sha256_label, EINA_TRUE);
     elm_entry_scrollable_set(ui->sha256_label, EINA_TRUE);
     evas_object_size_hint_weight_set(ui->sha256_label, EVAS_HINT_EXPAND, 0.5);
@@ -348,39 +355,33 @@ Ui_Main_Contents *elm_window_create(void)
     elm_box_pack_end(ui->box, ui->sha256_label);
     evas_object_show(ui->sha256_label);
 
-    Evas_Object *separator = elm_separator_add(ui->win);
+    Evas_Object *separator = elm_separator_add(popup);
     elm_separator_horizontal_set(separator, EINA_TRUE);
     evas_object_show(separator);
     elm_box_pack_end(ui->box, separator); 
     
-    ui->table = elm_table_add(ui->win);
-    elm_box_pack_end(ui->box, ui->table);
-    evas_object_show(ui->table);
 
  
-    ui->bt_ok = elm_button_add(ui->win);
+    ui->bt_ok = elm_button_add(popup);
     elm_object_text_set(ui->bt_ok, "Start");
-    evas_object_resize(ui->bt_ok, 164, 132);
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
     evas_object_show(ui->bt_ok);
 
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
 
-    ui->bt_cancel = elm_button_add(ui->win);
+    ui->bt_cancel = elm_button_add(popup);
     elm_object_text_set(ui->bt_cancel, "Exit");
-    evas_object_show(ui->bt_cancel);
     elm_table_pack(ui->table, ui->bt_cancel, 1, 0, 1, 1);
+    evas_object_show(ui->bt_cancel);
 
     evas_object_smart_callback_add(ui->bt_cancel, "clicked", _bt_cancel_clicked_cb, NULL);
 
-    ui->bt_about = elm_button_add(ui->win);
+    ui->bt_about = elm_button_add(popup);
     elm_object_text_set(ui->bt_about, "About");
-    evas_object_show(ui->bt_about);
     elm_table_pack(ui->table, ui->bt_about, 2, 0, 1, 1);
     evas_object_smart_callback_add(ui->bt_about, "clicked", _bt_about_clicked_cb, NULL);
+    evas_object_show(ui->bt_about);
    
-    Evas_Object *separator2 = elm_button_add(ui->win);
-    evas_object_show(separator2);
 
     // This is for FUN!!! 
     ui->canvas = evas_object_evas_get(ui->win);
@@ -394,6 +395,18 @@ Ui_Main_Contents *elm_window_create(void)
 
     evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
 
+    elm_box_pack_end(ui->box, ui->table);
+
+    Evas_Object *table = elm_table_add(popup);
+    elm_table_pack(table, ui->box, 0, 0, 1, 1);
+    elm_table_pack(table, ui->table, 0, 1, 1, 1);
+    elm_object_content_set(popup, table);
+
+    evas_object_show(ui->box);
+    evas_object_show(ui->table);
+    evas_object_show(table);
+    evas_object_resize(popup, 400, 400);
+    evas_object_show(popup);
     evas_object_show(ui->win);
 
     evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _resize_cb, NULL);
