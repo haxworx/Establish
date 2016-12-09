@@ -1,6 +1,7 @@
 #ifndef __UI_H__
 #define __UI_H__
 
+#define ELM_INTERFACE_ATSPI_ACCESSIBLE_PROTECTED
 #include <Elementary.h>
 #include <Ecore.h>
 #include <Ecore_Con.h>
@@ -24,6 +25,8 @@ struct _Ui_Main_Contents {
     Evas_Object *bt_ok;
     Evas_Object *bt_cancel;
     Evas_Object *bt_about;
+    Evas_Object *ee_effect;
+    Evas  *canvas;
     char *sha256sum;
 };
 

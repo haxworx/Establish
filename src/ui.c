@@ -34,6 +34,8 @@
 
 extern Ui_Main_Contents *ui;
 
+#define WIN_WIDTH 400
+#define WIN_HEIGHT 150
 
 static char *
 gl_text_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
@@ -86,6 +88,30 @@ update_combobox_storage(void)
     }
 }
 
+
+void about_popup(Evas_Object *win)
+{
+    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    elm_win_autodel_set(win, EINA_TRUE);
+
+    Evas_Object *content = elm_label_add(win);
+    elm_object_text_set(content, "<align=center>(c) Copyright 2016. Al Poole.<br> http://haxlab.org"
+		    		 "<br>netstar@gmail.com</align>");
+
+    Evas_Object *popup = elm_popup_add(win);
+
+    elm_object_content_set(popup, content);
+
+    elm_object_part_text_set(popup, "title,text", "About");
+   
+    evas_object_show(popup);
+
+    evas_object_smart_callback_add(popup, "unblock,clicked", NULL, NULL);
+
+    evas_object_show(win);
+}
+
+
 void error_popup(Evas_Object *win)
 {
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
@@ -106,7 +132,6 @@ void error_popup(Evas_Object *win)
 
     evas_object_show(win);
 }
-
 
 static void
 _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
@@ -191,6 +216,12 @@ win_del(void *data, Evas_Object *obj, void *event_info)
 }
 
 static void
+_bt_about_clicked_cb(void *data, Evas_Object *obj, void *event)
+{
+    about_popup(ui->win);
+}
+
+static void
 _bt_cancel_clicked_cb(void *data, Evas_Object *obj, void *event)
 {
     evas_object_del(obj);
@@ -231,14 +262,24 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 }
 
 
+static void
+_resize_cb(void *data, Evas *e, Evas_Object *obj,void *event_info)
+{
+    int w, h;
+    evas_object_geometry_get(obj, NULL, NULL, &w, &h);
+    evas_object_resize(ui->ee_effect ,w,h);
+}
 
 Ui_Main_Contents *elm_window_create(void)
 {
     int i;
+    char path[PATH_MAX];
+
     ui = malloc(sizeof(Ui_Main_Contents));
 
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
     ui->win = elm_win_util_standard_add("Establish", "Establish");
+
 
     ui->icon = evas_object_image_add(evas_object_evas_get(ui->win));
     evas_object_image_file_set(ui->icon, "images/icon.ico", NULL);
@@ -319,8 +360,9 @@ Ui_Main_Contents *elm_window_create(void)
  
     ui->bt_ok = elm_button_add(ui->win);
     elm_object_text_set(ui->bt_ok, "Start");
-    evas_object_show(ui->bt_ok);
+    evas_object_resize(ui->bt_ok, 164, 132);
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
+    evas_object_show(ui->bt_ok);
 
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
 
@@ -331,17 +373,30 @@ Ui_Main_Contents *elm_window_create(void)
 
     evas_object_smart_callback_add(ui->bt_cancel, "clicked", _bt_cancel_clicked_cb, NULL);
 
-    /*
     ui->bt_about = elm_button_add(ui->win);
     elm_object_text_set(ui->bt_about, "About");
     evas_object_show(ui->bt_about);
     elm_table_pack(ui->table, ui->bt_about, 2, 0, 1, 1);
+    evas_object_smart_callback_add(ui->bt_about, "clicked", _bt_about_clicked_cb, NULL);
+   
+    Evas_Object *separator2 = elm_button_add(ui->win);
+    evas_object_show(separator2);
 
-*/
-    evas_object_resize(ui->win, 368,150);
+    // This is for FUN!!! 
+    ui->canvas = evas_object_evas_get(ui->win);
+    ui->ee_effect = edje_object_add(ui->canvas);
+    snprintf(path, sizeof(path), "objects/test.edj");
+    edje_object_file_set(ui->ee_effect, path, "layout");
+    evas_object_color_set(ui->ee_effect, 255, 255, 255, 48);
+    evas_object_resize(ui->ee_effect,WIN_WIDTH, WIN_HEIGHT);
+    evas_object_show(ui->ee_effect);
+    evas_object_pass_events_set(ui->ee_effect, EINA_TRUE);
+
+    evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
 
     evas_object_show(ui->win);
 
+    evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _resize_cb, NULL);
     evas_object_smart_callback_add(ui->win, "delete,request", win_del, NULL);
     
     return ui;
