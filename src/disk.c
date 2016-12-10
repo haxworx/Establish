@@ -116,6 +116,8 @@ skip:
     free(drives);
 
 #elif defined(__FreeBSD__) || defined(__DragonFly__)
+    struct statfs *mounts;
+    int i;
 
     if ((sysctlbyname("kern.disks", NULL, &len, NULL, 0)) < 0) {
         return (0);
@@ -136,13 +138,20 @@ skip:
 	if (end)  
 	*end = '\0';
 
-        if (is_first || !strncmp(s, "cd", 2) || !strncmp(s, "vn", 2) || !strncmp(s, "md", 2)) {
-            is_first = false;
+        if (!strncmp(s, "cd", 2) || !strncmp(s, "vn", 2) || !strncmp(s, "md", 2)) {
 	    goto skip;
 	}
 
 	snprintf(buf, sizeof(buf), "/dev/%s", s);
-	storage[disk_count++] = strdup(buf);
+        int cnt = getmntinfo(&mounts, MNT_LOCAL);
+        for (i = 0; i < cnt; i++) {
+           if (!strstr(mounts[i].f_mntfromname, "/dev")) continue;
+           if (!strncmp(buf, mounts[i].f_mntfromname, strlen(buf))) {
+               break;
+           } else {
+               storage[disk_count++] = strdup(buf);
+	   }
+        }
 skip:
 	if (!end) {
             break;	

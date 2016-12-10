@@ -14,6 +14,12 @@
 #include <Eeze_Disk.h>
 #endif
 
+#if defined(__FreeBSD__) || defined(_DragonFly__)
+#include <sys/param.h>
+#include <sys/ucred.h>
+#include <sys/mount.h>
+#endif
+
 #define MAX_DISKS 10
 char *storage[MAX_DISKS];
 
