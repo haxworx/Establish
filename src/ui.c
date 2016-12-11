@@ -239,13 +239,12 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 {
    if (!remote_url) return;
    //if (!local_url) return;
-   if (!local_url) {
-       const char *txt = elm_object_text_get(ui->combobox_dest);
-       if (txt)
-	   local_url = strdup(txt);
-       else
-           return;
-   }
+   const char *txt = elm_object_text_get(ui->combobox_dest); 
+   if (txt)
+       local_url = strdup(txt);
+
+   if (strlen(txt) == 0) return;
+
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
    /* The ecore_con engine (better) */
