@@ -166,7 +166,9 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 	int tmp = chunk;	
         while (tmp) {
             ssize_t count = write(h->fd, pos, tmp);
-	    if (count <= 0) break;
+	    if (count <= 0) { 
+		    break;
+	    }
 
 	    pos += count;
 	    tmp -= count;

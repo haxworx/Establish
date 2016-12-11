@@ -160,10 +160,8 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
     int i = (int)(uintptr_t) elm_object_item_data_get(event_info);
     const char *txt = elm_object_item_text_get(event_info);
     snprintf(buf, sizeof(buf), "%s", storage[i]);
-
     if (local_url) free(local_url);
     local_url = strdup(txt);
-
     elm_object_text_set(obj, txt);
     elm_combobox_hover_end(obj);
 }
@@ -240,14 +238,19 @@ static void
 _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
    if (!remote_url) return;
-   if (!local_url) return;
-
+   //if (!local_url) return;
+   if (!local_url) {
+       const char *txt = elm_object_text_get(ui->combobox_dest);
+       if (txt)
+	   local_url = strdup(txt);
+       else
+           return;
+   }
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
-#if !defined(__FreeBSD__)
    /* The ecore_con engine (better) */
    ecore_www_file_save(remote_url, local_url);
-#else
+return;
    /* XXX: The fallback engine!  
     *
     * FreeBSD has a wee issue for now use this 
@@ -257,7 +260,6 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
     		   NULL, EINA_FALSE);
-#endif
    return; 
 }
 
@@ -324,10 +326,9 @@ Ui_Main_Contents *elm_window_create(void)
     ui->combobox_dest = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_dest, EVAS_HINT_FILL, 0);
-    elm_object_part_text_set(ui->combobox_dest, "guide", "Select install destination...");
+    elm_object_part_text_set(ui->combobox_dest, "guide", "Enter or select destination...");
     elm_box_pack_end(ui->box, ui->combobox_dest);
     evas_object_show(ui->combobox_dest);
-
     Elm_Genlist_Item_Class *itc2 = elm_genlist_item_class_new();
     itc2->item_style = "default";
     itc2->func.text_get = gl_text_dest_get;
