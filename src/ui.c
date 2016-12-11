@@ -205,7 +205,7 @@ thread_feedback(void *data, Ecore_Thread *thread, void *msg)
 #define thread_cancel thread_end
 
 static void
-win_del(void *data, Evas_Object *obj, void *event_info)
+_win_delete_cb(void *data, Evas_Object *obj, void *event_info)
 {
     evas_object_del(obj);
     if (timer) {
@@ -243,11 +243,10 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
-#if defined(__linux__) || defined(__OpenBSD__) || defined(__NetBSD__)
    /* The ecore_con engine (better) */
    ecore_www_file_save(remote_url, local_url);
 
-#else
+#if 0
    /* XXX: The fallback engine!  
     *
     * FreeBSD has a wee issue for now use this 
@@ -263,7 +262,7 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
 
 static void
-_resize_cb(void *data, Evas *e, Evas_Object *obj,void *event_info)
+_win_resize_cb(void *data, Evas *e, Evas_Object *obj,void *event_info)
 {
     int w, h;
     evas_object_geometry_get(obj, NULL, NULL, &w, &h);
@@ -289,7 +288,6 @@ Ui_Main_Contents *elm_window_create(void)
     Evas_Object *popup = elm_popup_add(ui->win);
     elm_popup_orient_set(popup, ELM_POPUP_ORIENT_CENTER);
     elm_popup_scrollable_set(popup, EINA_TRUE);
-    evas_object_resize(popup, 540, 400);
     evas_object_size_hint_weight_set(popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     evas_object_show(popup);
    
@@ -329,7 +327,6 @@ Ui_Main_Contents *elm_window_create(void)
     elm_box_pack_end(ui->box, ui->combobox_dest);
     evas_object_show(ui->combobox_dest);
 
-
     Elm_Genlist_Item_Class *itc2 = elm_genlist_item_class_new();
     itc2->item_style = "default";
     itc2->func.text_get = gl_text_dest_get;
@@ -364,28 +361,25 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_show(separator);
     elm_box_pack_end(ui->box, separator); 
     
-
- 
     ui->bt_ok = elm_button_add(popup);
     elm_object_text_set(ui->bt_ok, "Start");
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
-    evas_object_show(ui->bt_ok);
-
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
+    evas_object_show(ui->bt_ok);
 
     ui->bt_cancel = elm_button_add(popup);
     elm_object_text_set(ui->bt_cancel, "Exit");
     elm_table_pack(ui->table, ui->bt_cancel, 1, 0, 1, 1);
     evas_object_show(ui->bt_cancel);
-
     evas_object_smart_callback_add(ui->bt_cancel, "clicked", _bt_cancel_clicked_cb, NULL);
 
     ui->bt_about = elm_button_add(popup);
     elm_object_text_set(ui->bt_about, "About");
     elm_table_pack(ui->table, ui->bt_about, 2, 0, 1, 1);
-    evas_object_smart_callback_add(ui->bt_about, "clicked", _bt_about_clicked_cb, NULL);
     evas_object_show(ui->bt_about);
+    evas_object_smart_callback_add(ui->bt_about, "clicked", _bt_about_clicked_cb, NULL);
    
+    elm_box_pack_end(ui->box, ui->table);
 
     // This is for FUN!!! 
     ui->canvas = evas_object_evas_get(ui->win);
@@ -398,21 +392,17 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_pass_events_set(ui->ee_effect, EINA_TRUE);
 
 
-    elm_box_pack_end(ui->box, ui->table);
-
     Evas_Object *table = elm_table_add(popup);
     elm_table_pack(table, ui->box, 0, 0, 1, 1);
     elm_table_pack(table, ui->table, 0, 1, 1, 1);
     elm_object_content_set(popup, table);
     evas_object_size_hint_weight_set(table, EVAS_HINT_EXPAND, 0.5);
     evas_object_size_hint_align_set(table, EVAS_HINT_FILL, EVAS_HINT_FILL);
-
- 
     evas_object_show(table);
-
     
     evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
     evas_object_show(ui->win);
+
     evas_object_resize(popup, 600, 600);
     evas_object_show(popup);
    
@@ -424,8 +414,8 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, EVAS_HINT_FILL);
     evas_object_show(ui->box);
 
-    evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _resize_cb, NULL);
-    evas_object_smart_callback_add(ui->win, "delete,request", win_del, NULL);
+    evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _win_resize_cb, NULL);
+    evas_object_smart_callback_add(ui->win, "delete,request", _win_delete_cb, NULL);
     
     return ui;
 }

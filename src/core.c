@@ -145,9 +145,7 @@ get_distribution_list(void)
     return (EINA_TRUE);
 }
 
-
 /* uses ecore_con as the engine...*/
-
 
 static Eina_Bool
 _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
@@ -236,7 +234,7 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
         return;
     }
 
-    h->fd = open(local_uri,  O_WRONLY | O_CREAT, 0644);
+    h->fd = open(local_uri,  O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (h->fd == -1) {
 	error_popup(ui->win);
         return;
@@ -254,6 +252,7 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
 
 /* This is a fallback engine */
 
+#if 0
 int fd;
 SHA256_CTX ctx;
 int total_length;
@@ -337,3 +336,4 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     return strdup(sha256sum);
 }
 
+#endif

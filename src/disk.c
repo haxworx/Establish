@@ -118,6 +118,11 @@ skip:
 #elif defined(__FreeBSD__) || defined(__DragonFly__)
     struct statfs *mounts;
     int i;
+ 
+
+    /* This gets a list of disks recognised by the kernel */
+    /* However the ordering is not too predictable, hence */
+    /* checks below! */
 
     if ((sysctlbyname("kern.disks", NULL, &len, NULL, 0)) < 0) {
         return (0);
@@ -137,16 +142,17 @@ skip:
         char *end = strchr(s, ' ');
 	if (end)  
 	*end = '\0';
-
+        /* Skip these prefixed devices as they are not useful for us */
         if (!strncmp(s, "cd", 2) || !strncmp(s, "vn", 2) || !strncmp(s, "md", 2)) {
 	    goto skip;
 	}
-
+        /* we check here the device is NOT mounted */
 	snprintf(buf, sizeof(buf), "/dev/%s", s);
         int cnt = getmntinfo(&mounts, MNT_LOCAL);
         for (i = 0; i < cnt; i++) {
            if (!strstr(mounts[i].f_mntfromname, "/dev")) continue;
            if (!strncmp(buf, mounts[i].f_mntfromname, strlen(buf))) {
+               /* This device is mounted - ignore! */
                break;
            } else {
                storage[disk_count++] = strdup(buf);
@@ -159,7 +165,6 @@ skip:
 	end++;
 	s = end;
     }
-
     free(drives);
 
 #elif defined(__linux__) // This is gross!
