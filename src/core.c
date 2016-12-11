@@ -264,7 +264,6 @@ ecore_www_file_save(const char *remote_url, const char *local_uri)
 
 /* This is a fallback engine */
 
-#if 0
 int fd;
 SHA256_CTX ctx;
 int total_length;
@@ -348,4 +347,3 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     return strdup(sha256sum);
 }
 
-#endif

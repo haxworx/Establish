@@ -167,7 +167,7 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
     elm_object_text_set(obj, txt);
     elm_combobox_hover_end(obj);
 }
-/*
+
 static void
 thread_do(void *data, Ecore_Thread *thread)
 {
@@ -189,7 +189,8 @@ thread_end(void *data, Ecore_Thread *thread)
 
     elm_object_disabled_set(ui->bt_ok, EINA_FALSE);
     //elm_progressbar_pulse(ui->progressbar, EINA_FALSE);
-    while((ecore_thread_wait(thread, 0.1)) != EINA_TRUE);
+    //while((ecore_thread_wait(thread, 0.1)) != EINA_TRUE);
+    thread = NULL; 
 }
 
 static void
@@ -203,7 +204,7 @@ thread_feedback(void *data, Ecore_Thread *thread, void *msg)
 }
 
 #define thread_cancel thread_end
-*/
+
 static void
 _win_delete_cb(void *data, Evas_Object *obj, void *event_info)
 {
@@ -243,10 +244,10 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
+#if !defined(__FreeBSD__)
    /* The ecore_con engine (better) */
    ecore_www_file_save(remote_url, local_url);
-
-#if 0
+#else
    /* XXX: The fallback engine!  
     *
     * FreeBSD has a wee issue for now use this 
