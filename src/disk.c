@@ -201,8 +201,6 @@ skip:
 	}
     }
 
-    parents = eina_list_sort(parents, -1, _string_cmp);
-
     EINA_LIST_FOREACH(parents, l, data) {
         path = eeze_udev_syspath_get_devpath(data);
 	if (!path) continue;
@@ -215,7 +213,6 @@ skip:
     eina_list_free(devices);
     eina_list_free(parents);
     eina_list_free(blacklist);
-
     eeze_shutdown();
 #else
 #error "Unsupported Operating System"
