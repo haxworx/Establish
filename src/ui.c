@@ -301,7 +301,6 @@ Ui_Main_Contents *elm_window_create(void)
     const char *message = "<font_size=18 font_weidth=semibold>Establish</font>";
     ui->label = elm_label_add(popup);
     elm_object_text_set(ui->label, message);
-    evas_object_text_style_set(ui->label, EVAS_TEXT_STYLE_GLOW);
     evas_object_show(ui->label);
     elm_box_pack_end(ui->box, ui->label);
 
@@ -321,8 +320,6 @@ Ui_Main_Contents *elm_window_create(void)
                 NULL, ELM_GENLIST_ITEM_NONE, NULL, (void *)(uintptr_t) i);
     evas_object_smart_callback_add(ui->combobox_source, "item,pressed",
                                      _combobox_source_item_pressed_cb, NULL);
-
-    elm_genlist_item_selected_set(ui->combobox_source, EINA_TRUE);
 
     ui->combobox_dest = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
