@@ -95,8 +95,8 @@ void about_popup(Evas_Object *win)
     elm_win_autodel_set(win, EINA_TRUE);
 
     Evas_Object *content = elm_label_add(win);
-    elm_object_text_set(content, "<align=center>(c) Copyright 2016. Al Poole.<br> http://haxlab.org"
-		    		 "<br>netstar@gmail.com</align>");
+    elm_object_text_set(content, "<align=center>(c) Copyright 2016. Al Poole.<br><br> http://haxlab.org"
+		    		 "<br><br>netstar@gmail.com</align>");
 
     Evas_Object *popup = elm_popup_add(win);
 
