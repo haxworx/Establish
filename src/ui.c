@@ -167,7 +167,7 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
     elm_object_text_set(obj, txt);
     elm_combobox_hover_end(obj);
 }
-
+/*
 static void
 thread_do(void *data, Ecore_Thread *thread)
 {
@@ -203,7 +203,7 @@ thread_feedback(void *data, Ecore_Thread *thread, void *msg)
 }
 
 #define thread_cancel thread_end
-
+*/
 static void
 _win_delete_cb(void *data, Evas_Object *obj, void *event_info)
 {
