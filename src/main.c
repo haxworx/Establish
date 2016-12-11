@@ -47,7 +47,7 @@ system_check_changes(void *data)
 }
 
 static
-_warning_to_user(void)
+void _warning_to_user(void)
 {
     printf("WARNING!!!\n");
     printf("Please check before you write to disk.\n");

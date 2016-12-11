@@ -309,7 +309,7 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
 
     fd = open(local_uri, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd == -1) {
-        fail("unable to write!");
+	return NULL;
     }
 
     req->callback_set(req->self, CALLBACK_DATA, data_received_cb);

@@ -84,7 +84,8 @@ update_combobox_storage(void)
     } 
 
     if (i) {
-        elm_object_part_text_set(ui->combobox_dest, "guide", "destination...");
+        elm_object_part_text_set(ui->combobox_dest, "guide", "Disk found!");
+        elm_genlist_realized_items_update(ui->combobox_dest);
     }
 }
 
@@ -118,7 +119,8 @@ void error_popup(Evas_Object *win)
     elm_win_autodel_set(win, EINA_TRUE);
 
     Evas_Object *content = elm_label_add(win);
-    elm_object_text_set(content, "<align=center>You don't have valid permissions to write to that device.</align>");
+    elm_object_text_set(content, 
+                        "<align=center>You don't have valid permissions to write to that location.</align>");
 
     Evas_Object *popup = elm_popup_add(win);
 
@@ -138,9 +140,10 @@ _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
                       void *event_info)
 {
     char buf[256];
-          elm_genlist_realized_items_update(ui->combobox_source);
     const char *txt = elm_object_item_text_get(event_info);
     int i = (int)(uintptr_t) elm_object_item_data_get(event_info);
+
+    elm_genlist_realized_items_update(ui->combobox_source);
 
     snprintf(buf, sizeof(buf), "%s", distributions[i]->url);
 
@@ -156,10 +159,9 @@ static void
 _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
                       void *event_info)
 {
-    char buf[256];
     int i = (int)(uintptr_t) elm_object_item_data_get(event_info);
     const char *txt = elm_object_item_text_get(event_info);
-    snprintf(buf, sizeof(buf), "%s", storage[i]);
+
     if (local_url) free(local_url);
     local_url = strdup(txt);
     elm_object_text_set(obj, txt);
@@ -183,11 +185,10 @@ thread_end(void *data, Ecore_Thread *thread)
     if (ui->sha256sum) {
         elm_object_text_set(ui->sha256_label, ui->sha256sum);
         free(ui->sha256sum);
-    }
+    } else
+        error_popup(ui->win);
 
     elm_object_disabled_set(ui->bt_ok, EINA_FALSE);
-    //elm_progressbar_pulse(ui->progressbar, EINA_FALSE);
-    //while((ecore_thread_wait(thread, 0.1)) != EINA_TRUE);
     thread = NULL; 
 }
 
@@ -228,9 +229,9 @@ _bt_cancel_clicked_cb(void *data, Evas_Object *obj, void *event)
     if (timer) {
         ecore_timer_del(timer);
     }
-    
+   
     while((ecore_thread_wait(thread, 0.1)) != EINA_TRUE);
-
+    thread = NULL;
     elm_exit();
 }
 
@@ -238,7 +239,6 @@ static void
 _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED)
 {
    if (!remote_url) return;
-   //if (!local_url) return;
    const char *txt = elm_object_text_get(ui->combobox_dest); 
    if (strlen(txt) == 0) return;
 
@@ -247,9 +247,10 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
+#if ! defined(__FreeBSD__)
    /* The ecore_con engine (better) */
    ecore_www_file_save(remote_url, local_url);
-return;
+#else
    /* XXX: The fallback engine!  
     *
     * FreeBSD has a wee issue for now use this 
@@ -259,6 +260,7 @@ return;
 
    thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
     		   NULL, EINA_FALSE);
+#endif
    return; 
 }
 
