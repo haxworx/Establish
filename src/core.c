@@ -147,24 +147,34 @@ get_distribution_list(void)
 
 /* uses ecore_con as the engine...*/
 
+/* this is important when writing to char device */
+#define CHUNK_SIZE 512 
+
 static Eina_Bool
 _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
 {
     handler_t *h = data;
     Ecore_Con_Event_Url_Data *url_data = event_info;
-    SHA256_Update(&h->ctx, url_data->data, url_data->size);
-    int chunk = url_data->size;
     unsigned char *pos = url_data->data;
+    int total = url_data->size;
 
-    while (chunk) {
-        ssize_t count =  write(h->fd, pos, chunk);
-        if (count <= 0) {
-            break;
+    while (total) {
+        int chunk = CHUNK_SIZE;	
+        if (total < chunk) 
+            chunk = total;
+
+	int tmp = chunk;	
+        while (tmp) {
+            ssize_t count = write(h->fd, pos, tmp);
+	    if (count <= 0) break;
+
+	    pos += count;
+	    tmp -= count;
         }
-         
-        pos += count;
-        chunk -= count;
+	total -= chunk;
     }
+    
+    SHA256_Update(&h->ctx, url_data->data, url_data->size);
 
     return (EINA_TRUE);
 }
@@ -181,6 +191,8 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
     close(h->fd);
 
     sync();
+
+    elm_progressbar_value_set(ui->progressbar, (double) 1.0);
 
     SHA256_Final(result, &h->ctx);
 
