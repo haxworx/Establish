@@ -31,6 +31,9 @@
 #include "core.h"
 #include "ui.h"
 #include "http.h"
+#if defined(__FreeBSD__) || defined(__DragonFly__)
+#include <assert.h>
+#endif
 
 extern Ui_Main_Contents *ui;
 
@@ -281,6 +284,7 @@ data_done_cb(void *data)
 static int
 data_received_cb(void *data)
 {
+    char buffer[512];
     data_cb_t *received = data;
     if (!received) return 0;
 
@@ -293,7 +297,41 @@ data_received_cb(void *data)
     
     SHA256_Update(&ctx, received->data, received->size);
 
-    return write(fd, received->data, received->size);
+    char *pos = received->data;
+
+    int total = received->size;
+    if (total < sizeof(buffer)) {
+        memcpy(buffer, pos, received->size);
+	int i = 0;
+	for (i = received->size; i < sizeof(buffer); i++)
+	    buffer[i] = 0;
+	total = sizeof(buffer);
+	pos = buffer;
+    }
+
+#if defined(__FreeBSD__) || defined(__DragonFly__)
+    assert(total == sizeof(buffer));
+#endif
+
+    while (total) {
+        int chunk = CHUNK_SIZE;	
+        if (total < chunk) 
+            chunk = total;
+
+	int tmp = chunk;	
+        while (tmp) {
+            ssize_t count = write(fd, pos, tmp);
+	    if (count <= 0) { 
+		    break;
+	    }
+
+	    pos += count;
+	    tmp -= count;
+        }
+	total -= chunk;
+    }
+
+    return (1);
 }
 
 char *

@@ -174,6 +174,8 @@ thread_do(void *data, Ecore_Thread *thread)
     int count = 0;
     ui->sha256sum = www_file_save(thread, remote_url, local_url);
 
+    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
+
     if (ecore_thread_check(thread)) {
        return;
     }
@@ -247,19 +249,21 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
-#if ! defined(__FreeBSD__)
+#if ! defined(__FreeBSD__) && ! defined(__DragonFly__)
    /* The ecore_con engine (better) */
    ecore_www_file_save(remote_url, local_url);
 #else
-   /* XXX: The fallback engine!  
-    *
-    * FreeBSD has a wee issue for now use this 
-    * Also this should work everywhere else */
+   /* FreeBSD uses buffered char devices */
+   struct stat fstats;
 
-   elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
+   stat(local_url, &fstats);
 
-   thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
+   if (!S_ISCHR(fstats.st_mode)) {
+       ecore_www_file_save(remote_url, local_url);
+   } else {
+       thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
     		   NULL, EINA_FALSE);
+   } 
 #endif
    return; 
 }

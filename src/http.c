@@ -224,10 +224,13 @@ url_header_get(url_t *url, const char *name)
 
 #define MAX_FILE_SIZE 2147483648 - 1
 
+#defined BUFFER_SIZE 512
+
 static void
 _http_content_get(url_t *url)
 {
-    char buf[1024];
+    /* This is important for buffered writes on FreeBSD */
+    char buf[BUFFER_SIZE];
     unsigned int length = 0;
     int bytes;
 
@@ -252,14 +255,23 @@ _http_content_get(url_t *url)
     }
 
     int ratio = length / 100;
+ 
+    int i;
 
     do {
         bytes = Read(url, buf, sizeof(buf));
         if (bytes <= 0 ) {
             break; 
         }
-        
-       if (url->callback_data) {
+#if defined(__FreeBSD__) || defined(__DragonFly__)
+	/* This is REALLY bogus buffering */
+        if (bytes < sizeof(buf) && (total + bytes) < length) {
+            for(i = bytes; i < sizeof(buf); i++) 
+	        Read(url, &buf[i], 1);
+	    bytes = sizeof(buf);
+        }    
+#endif
+        if (url->callback_data) {
             data_cb_t received;
             received.data = buf;
             received.size = bytes;
