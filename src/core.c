@@ -298,9 +298,11 @@ data_received_cb(void *data)
     SHA256_Update(&ctx, received->data, received->size);
 
     char *pos = received->data;
-
     int total = received->size;
+
+#if defined(__FreeBSD__) || defined(__DragonFly__)
     if (total < sizeof(buffer)) {
+	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
 	int i = 0;
 	for (i = received->size; i < sizeof(buffer); i++)
@@ -309,7 +311,6 @@ data_received_cb(void *data)
 	pos = buffer;
     }
 
-#if defined(__FreeBSD__) || defined(__DragonFly__)
     assert(total == sizeof(buffer));
 #endif
 

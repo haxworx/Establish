@@ -266,6 +266,7 @@ _http_content_get(url_t *url)
 #if defined(__FreeBSD__) || defined(__DragonFly__)
 	/* This is REALLY bogus buffering */
         if (bytes < sizeof(buf) && (total + bytes) < length) {
+            fprintf(stderr, "Buffering [read]...\n");
             for(i = bytes; i < sizeof(buf); i++) 
 	        Read(url, &buf[i], 1);
 	    bytes = sizeof(buf);
