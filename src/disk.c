@@ -103,7 +103,7 @@ system_get_disks(void)
             s++;
         }
 
-        snprintf(buf, sizeof(buf), "/dev/%sc", s);
+        snprintf(buf, sizeof(buf), "/dev/r%sc", s);
         storage[disk_count++] = strdup(buf);
 skip:
         end++;
