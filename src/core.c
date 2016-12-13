@@ -301,6 +301,7 @@ data_received_cb(void *data)
     int total = received->size;
 
 #if defined(__FreeBSD__) || defined(__DragonFly__)
+    // This should be the last one!
     if (total < sizeof(buffer)) {
 	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
