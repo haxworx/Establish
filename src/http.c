@@ -224,7 +224,7 @@ url_header_get(url_t *url, const char *name)
 
 #define MAX_FILE_SIZE 2147483648 - 1
 
-#defined BUFFER_SIZE 512
+#define BUFFER_SIZE 512
 
 static void
 _http_content_get(url_t *url)
