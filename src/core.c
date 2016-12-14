@@ -31,7 +31,6 @@
 #include "core.h"
 #include "ui.h"
 #include "http.h"
-#include <assert.h>
 
 extern Ui_Main_Contents *ui;
 
@@ -302,6 +301,7 @@ data_received_cb(void *data)
 
     if (is_chardev && total < sizeof(buffer)) {
 	/* For a filesystem image this shouldn't happen! */
+	/* Sometimes it does!!! */
 	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
 	int i = 0;
@@ -310,8 +310,6 @@ data_received_cb(void *data)
 	total = sizeof(buffer);
 	pos = buffer;
     }
-
-    assert(total == sizeof(buffer));
 
     while (total) {
         int chunk = BUFFER_SIZE;	
