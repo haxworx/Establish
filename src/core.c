@@ -31,9 +31,7 @@
 #include "core.h"
 #include "ui.h"
 #include "http.h"
-#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <assert.h>
-#endif
 
 extern Ui_Main_Contents *ui;
 
