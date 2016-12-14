@@ -300,8 +300,8 @@ data_received_cb(void *data)
     char *pos = received->data;
     int total = received->size;
 
-    // This should be the last one!
     if (is_chardev && total < sizeof(buffer)) {
+	/* For a filesystem image this shouldn't happen! */
 	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
 	int i = 0;
