@@ -1,16 +1,16 @@
-Best building from source.
-
 You'll need to install EFL from enlightenment.org.
 
-Most distributions will use the package names of either:
+Most Linux distributions will use the package names of either:
 
 efl-dev or efl-devel 
+
+FreeBSD and DragonFly BSD contain recent versions of 
+EFL and Enlightenment. Ordinarily named:
+
+efl and enlightenment
 
 You'll also need pkg-config and a C compiler!
 
 Simply run "make" or "gmake" and run the "establish"
 binary.
 
-FIXME:
-
-Protect disks that are important!

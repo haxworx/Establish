@@ -17,8 +17,6 @@ OBJECTS = http.o disks.o ui.o core.o main.o
 
 $(TARGET) : $(OBJECTS)
 	$(CC) $(FLAGS) $(OBJECTS) -o $@
-	$(CC) $(shell pkg-config --libs openssl) $(SRC_DIR)/http.c $(SRC_DIR)/ayup.c -o ayup
-	$(CC) $(shell pkg-config --libs openssl) $(SRC_DIR)/http.c $(SRC_DIR)/selector.c -o selector
 
 main.o: $(SRC_DIR)/main.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $(SRC_DIR)/main.c -o $@
@@ -37,5 +35,4 @@ ui.o: $(SRC_DIR)/ui.c
 
 clean:
 	-rm $(OBJECTS) $(TARGET)
-	-rm selector ayup
 
