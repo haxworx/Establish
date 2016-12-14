@@ -257,10 +257,9 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 
    stat(local_url, &fstats);
 
-   if (0 && !S_ISCHR(fstats.st_mode)) {
+   if (!S_ISCHR(fstats.st_mode)) {
        ecore_www_file_save(remote_url, local_url);
    } else {
-	   printf("THREADS!\n");
        elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
        thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
     		   NULL, EINA_FALSE);
