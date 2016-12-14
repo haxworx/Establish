@@ -262,7 +262,6 @@ _http_content_get(url_t *url)
         }
 
         while (bytes < BUFFER_SIZE) {
-            fprintf(stderr, "Buffering...[read]\n");
 	    if ((total + bytes) == length) break;
 	    ssize_t count = Read(url, &buf[bytes], BUFFER_SIZE - bytes);
 	    if (count <= 0) {
