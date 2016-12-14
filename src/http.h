@@ -22,6 +22,8 @@
 #define CALLBACK_DONE 0x01
 #define CALLBACK_DATA 0x02
 
+#define BUFFER_SIZE 2048
+
 typedef int (*callback)(void *data);
 
 typedef int (*fn_get)(void *self);

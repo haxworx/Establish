@@ -284,7 +284,7 @@ data_done_cb(void *data)
 static int
 data_received_cb(void *data)
 {
-    char buffer[512];
+    char buffer[BUFFER_SIZE];
     data_cb_t *received = data;
     if (!received) return 0;
 
