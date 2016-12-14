@@ -253,17 +253,10 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
    ecore_www_file_save(remote_url, local_url);
 #else
    /* FreeBSD uses buffered char devices */
-   struct stat fstats;
-
-   stat(local_url, &fstats);
-
-   if (!S_ISCHR(fstats.st_mode)) {
-       ecore_www_file_save(remote_url, local_url);
-   } else {
-       elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
-       thread = ecore_thread_feedback_run(thread_do, thread_feedback, thread_end, thread_cancel,
-    		   NULL, EINA_FALSE);
-   } 
+   elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
+   thread = ecore_thread_feedback_run(thread_do, thread_feedback, 
+                   thread_end, thread_cancel,
+                   NULL, EINA_FALSE);
 #endif
    return; 
 }

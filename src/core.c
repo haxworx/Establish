@@ -298,7 +298,6 @@ data_received_cb(void *data)
 
     char *pos = received->data;
     int total = received->size;
-
     if (is_chardev && total < sizeof(buffer)) {
 	/* For a filesystem image this shouldn't happen! */
 	/* Sometimes it does!!! */
@@ -337,7 +336,6 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
 {
     int i = 0, j = 0;
     struct stat fstats;
-
 
     url_t *req = url_new(remote_url);
 
