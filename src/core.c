@@ -273,6 +273,7 @@ SHA256_CTX ctx;
 int total_length;
 int bytes_so_far;
 double percent;
+bool is_chardev;
 
 static int 
 data_done_cb(void *data)
@@ -284,6 +285,8 @@ static int
 data_received_cb(void *data)
 {
     char buffer[BUFFER_SIZE];
+    /* We should always receive BUFFER_SIZE
+     * unless the last transfer */
     data_cb_t *received = data;
     if (!received) return 0;
 
@@ -299,9 +302,8 @@ data_received_cb(void *data)
     char *pos = received->data;
     int total = received->size;
 
-#if defined(__FreeBSD__) || defined(__DragonFly__)
     // This should be the last one!
-    if (total < sizeof(buffer)) {
+    if (is_chardev && total < sizeof(buffer)) {
 	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
 	int i = 0;
@@ -312,7 +314,6 @@ data_received_cb(void *data)
     }
 
     assert(total == sizeof(buffer));
-#endif
 
     while (total) {
         int chunk = BUFFER_SIZE;	
@@ -339,17 +340,22 @@ char *
 www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_uri)
 {
     int i = 0, j = 0;
-    url_t *req = url_new(remote_url);
+    struct stat fstats;
 
-    bytes_so_far = 0;
+
+    url_t *req = url_new(remote_url);
 
     SHA256_Init(&ctx);
     fd = -1;
+    bytes_so_far = 0;
 
     fd = open(local_uri, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd == -1) {
 	return NULL;
     }
+
+    stat(local_uri, &fstats);
+    if (S_ISCHR(fstats.st_mode)) is_chardev = true;
 
     req->callback_set(req->self, CALLBACK_DATA, data_received_cb);
     req->callback_set(req->self, CALLBACK_DONE, data_done_cb);
