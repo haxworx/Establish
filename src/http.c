@@ -265,12 +265,12 @@ _http_content_get(url_t *url)
             fprintf(stderr, "Buffering...[read]\n");
 	    if ((total + bytes) == length) break;
 	    ssize_t count = Read(url, &buf[bytes], total - bytes);
-	    if (bytes <= 0) {
+	    if (count <= 0) {
                 break;
             }
 	    bytes += count;
         } 
-
+exit(0);
         if (url->callback_data) {
             data_cb_t received;
             received.data = buf;
