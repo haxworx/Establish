@@ -151,7 +151,6 @@ get_distribution_list(void)
 /* uses ecore_con as the engine...*/
 
 /* this is important when writing to char device */
-#define CHUNK_SIZE 512 
 
 static Eina_Bool
 _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
@@ -162,7 +161,7 @@ _download_data_cb(void *data, int type EINA_UNUSED, void *event_info)
     int total = url_data->size;
 
     while (total) {
-        int chunk = CHUNK_SIZE;	
+        int chunk = BUFFER_SIZE;	
         if (total < chunk) 
             chunk = total;
 
@@ -316,7 +315,7 @@ data_received_cb(void *data)
 #endif
 
     while (total) {
-        int chunk = CHUNK_SIZE;	
+        int chunk = BUFFER_SIZE;	
         if (total < chunk) 
             chunk = total;
 

@@ -230,7 +230,9 @@ _http_content_get(url_t *url)
     /* This is important for buffered writes on FreeBSD */
     char buf[BUFFER_SIZE];
     unsigned int length = 0;
+    int total = 0;
     int bytes;
+    int ratio;
 
     const char *have_length = url_header_get(url, "Content-Length");
     if (have_length) {
@@ -243,7 +245,7 @@ _http_content_get(url_t *url)
         length = MAX_FILE_SIZE;
     }
 
-    int total = 0;
+    ratio = length / 100;
 
     /* start the read by reading one byte */
     Read(url, buf, 1);
@@ -252,24 +254,23 @@ _http_content_get(url_t *url)
         url->data = calloc(1, length);
     }
 
-    int ratio = length / 100;
  
-    int i;
-
     do {
-        bytes = Read(url, buf, sizeof(buf));
+        bytes = Read(url, buf, BUFFER_SIZE);
         if (bytes <= 0 ) {
             break; 
         }
-#if defined(__FreeBSD__) || defined(__DragonFly__)
-	/* This is REALLY bogus buffering */
-        if (bytes < sizeof(buf) && (total + bytes) < length) {
-            fprintf(stderr, "Buffering [read]...\n");
-            for(i = bytes; i < sizeof(buf); i++) 
-	        Read(url, &buf[i], 1);
-	    bytes = sizeof(buf);
-        }    
-#endif
+
+        while (bytes < BUFFER_SIZE) {
+            fprintf(stderr, "Buffering...[read]\n");
+	    if ((total + bytes) == length) break;
+	    ssize_t count = Read(url, &buf[bytes], total - bytes);
+	    if (bytes <= 0) {
+                break;
+            }
+	    bytes += count;
+        } 
+
         if (url->callback_data) {
             data_cb_t received;
             received.data = buf;
