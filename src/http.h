@@ -22,7 +22,8 @@
 #define CALLBACK_DONE 0x01
 #define CALLBACK_DATA 0x02
 
-#define BUFFER_SIZE 4096
+// block size
+#define BUFFER_SIZE 512
 
 typedef int (*callback)(void *data);
 
