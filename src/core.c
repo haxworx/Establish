@@ -287,25 +287,14 @@ data_received_cb(void *data)
     data_cb_t *received = data;
     if (!received) return 0;
 
-    bytes_so_far += received->size;
-    int current = bytes_so_far / percent;
-    int *tmp = malloc(sizeof(double));
-    *tmp = (int) current;
-
-    ecore_thread_feedback(thread, tmp);
-    
-    SHA256_Update(&ctx, received->data, received->size);
-
     char *pos = received->data;
     int total = received->size;
+
     if (is_chardev && total < sizeof(buffer)) {
-	/* For a filesystem image this shouldn't happen! */
-	/* Sometimes it does!!! */
+	/* Padding end with zeroes to boundary */
 	fprintf(stderr, "Buffering [write]...\n");
         memcpy(buffer, pos, received->size);
-	int i = 0;
-	for (i = received->size; i < sizeof(buffer); i++)
-	    buffer[i] = 0;
+	memset(&buffer[received->size], 0, sizeof(buffer) - received->size);
 	total = sizeof(buffer);
 	pos = buffer;
     }
@@ -319,14 +308,22 @@ data_received_cb(void *data)
         while (tmp) {
             ssize_t count = write(fd, pos, tmp);
 	    if (count <= 0) { 
-		    break;
+                break;
 	    }
-
 	    pos += count;
 	    tmp -= count;
         }
 	total -= chunk;
     }
+    
+    bytes_so_far += received->size;
+    int current = bytes_so_far / percent;
+    int *tmp = malloc(sizeof(double));
+    *tmp = (int) current;
+
+    ecore_thread_feedback(thread, tmp);
+    
+    SHA256_Update(&ctx, received->data, received->size);
 
     return (1);
 }
