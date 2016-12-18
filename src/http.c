@@ -79,19 +79,20 @@ path_from_url(const char *path)
 static BIO *
 Connect_Ssl(const char *hostname, int port)
 {
+    char bio_addr[8192];
+    BIO *bio;
+    SSL_CTX *ctx;
+    SSL *ssl = NULL;
+
     SSL_load_error_strings();
     ERR_load_BIO_strings();
     OpenSSL_add_all_algorithms();
-
-    BIO *bio;
-    char bio_addr[8192];
 
     snprintf(bio_addr, sizeof(bio_addr), "%s:%d", hostname, port);
 
     SSL_library_init();
 
-    SSL_CTX *ctx = SSL_CTX_new(SSLv23_client_method());
-    SSL *ssl = NULL;
+    ctx = SSL_CTX_new(SSLv23_client_method());
 
     SSL_CTX_set_timeout(ctx, 5);
     SSL_CTX_load_verify_locations(ctx, "/etc/ssl/certs", NULL);
@@ -110,7 +111,6 @@ Connect_Ssl(const char *hostname, int port)
     }
 
     return (bio);
-
 }
 
 
@@ -253,13 +253,9 @@ _http_content_get(url_t *url)
     if (length && !url->callback_data && url->fd == -1) {
         url->data = calloc(1, length);
     }
-
  
     do {
-        bytes = Read(url, buf, BUFFER_SIZE);
-        if (bytes <= 0 ) {
-            break; 
-        }
+        bytes = 0;
 
         while (bytes < BUFFER_SIZE) {
 	    if ((total + bytes) == length) break;
@@ -297,25 +293,19 @@ _http_content_get(url_t *url)
     if (url->callback_done) {
         url->callback_done(NULL);
     }
-
-    printf("\n");
 }
 
 
 static int
 _http_headers_get(url_t *url)
 {
+    char buf[4096] = { 0 };
+    int len = 0, bytes = 0, idx = 0;
     int i;
 
     for (i = 0; i < MAX_HEADERS; i++) {
         url->headers[i] = NULL;
     }
-
-    int bytes = 0;
-    int len = 0;
-    char buf[4096] = { 0 };
-
-    int idx = 0;
 
     while (1) {
         len = 0;
@@ -372,7 +362,9 @@ url_new(const char *addr)
 
     if (!url->user_agent) {
         url->user_agent = strdup
-	("Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19");
+	("Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) "
+	 "AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 " 
+	 "Mobile Safari/535.19");
     } 
 
     if (!strncmp(addr, "https://", 8)) {
@@ -516,8 +508,9 @@ url_fd_write_set(url_t *url, int fd)
 {
     if (fd >= 0) {
         url->fd = fd;
+	return (fd);
     }
-    return (0);
+    return (-1);
 }
 
 void
