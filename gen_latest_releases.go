@@ -9,20 +9,15 @@ import (
     "bufio"
 )
 
-type Distro struct {
-    url string;
-    architecture string;
-};
+func Exit(value int)  {
+    os.Exit(value);
+}
 
 func Check(err error) {
     if err != nil {
         fmt.Printf("Error: %s\n", err);
         Exit(1);
     }
-}
-
-func Exit(value int)  {
-    os.Exit(value);
 }
 
 func UrlDataGet(url string) string {
@@ -41,7 +36,7 @@ func UrlDataGet(url string) string {
 
 
 func ParseForLatestDebian(arch string) string {
-    base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd/";
+    base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd";
 
     data := UrlDataGet(base_url)
 
@@ -52,59 +47,60 @@ func ParseForLatestDebian(arch string) string {
     str := data[idx + len(tag_start) :len(data)];
     end := strings.Index(str, "\""); 
     filename := str[0:end]
-    return fmt.Sprintf("%s%s", base_url, filename);
+
+    return fmt.Sprintf("%s/%s", base_url, filename);
+}
+
+func newestURL(data string, major_start int, major_end int) string {
+    var found string = "";
+    for major := major_start; major < major_end; major++ {
+        for minor := 0; minor < 10; minor++ {
+            tmp := fmt.Sprintf("%d.%d", major, minor)
+            if strings.Contains(data, tmp) {
+                found = tmp;
+            }
+        }
+    }
+    return found;
 }
 
 func ParseForLatestFreeBSD(arch string) string {
 
-    base_url := "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES/";
+    const FREEBSD_MAJOR_START = 11
+    const FREEBSD_MAJOR_END = 20
+    base_url := "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES";
 
     data := UrlDataGet(base_url);
 
-    var found string = "";
-    var version string = ""
+    var version string = newestURL(data, FREEBSD_MAJOR_START, FREEBSD_MAJOR_END);
 
-    for i := 11; i < 20; i++ {
-        for j := 0; j < 10; j++ {
-            version = fmt.Sprintf("%d.%d", i, j);
-            if strings.Contains(data, version) {
-                found = version;
-            }
-        }
+    if version != "" {
+        return fmt.Sprintf("%s/%s/FreeBSD-%s-RELEASE-%s-memstick.img", base_url, version, version, arch);
     }
 
-    if found != "" {
-        return fmt.Sprintf("%s%s/FreeBSD-%s-RELEASE-%s-memstick.img", base_url, found, found, arch);
-    }
     return version;
 }
 
 func ParseForLatestOpenBSD(arch string) string {
+    const OPENBSD_MAJOR_START = 6;
+    const OPENBSD_MAJOR_END = 10;
     base_url := "http://mirror.ox.ac.uk/pub/OpenBSD/";
  
     data := UrlDataGet(base_url); 
 
-    var found string =  "";
-    var version string = "";
+    var version string  = newestURL(data, OPENBSD_MAJOR_START, OPENBSD_MAJOR_END);
 
-    for i := 6; i < 10; i++ {
-        for j := 0; j < 10; j++ {
-            tmp := fmt.Sprintf("%d.%d", i, j);
-            if (strings.Contains(data, tmp)) {
-                found = fmt.Sprintf("%d%d", i, j);
-                version = tmp;
-            }
-        }
-    }
-
-    if found != "" {
-        return fmt.Sprintf("%s%s/%s/install%s.fs", base_url, version, arch, found);
+    // hack for changing 6.0 to 60 for filename on server
+    img_ver := strings.Replace(version, ".", "", -1);
+    
+    if version != "" {
+        return fmt.Sprintf("%s%s/%s/install%s.fs", base_url, version, arch, img_ver);
     }
 
     return "";
 }
 
-func LatestReleaseURL(os string, arch string) Distro {
+func LatestReleaseURL(os string, arch string) string {
     var url string = "";
 
     switch (os) {
@@ -126,22 +122,20 @@ func LatestReleaseURL(os string, arch string) Distro {
         Exit(1);
     }
 
-    latest := Distro { architecture: arch, url: url };
-
-    return latest;
+    return url;
 }
 
-func distroGetAll() map[string]Distro {
+func distroGetAll() map[string]string {
 
-    distros := make(map[string]Distro);
-
-    distros["Debian GNU/Linux (i386/amd64)"] = LatestReleaseURL("Debian", "amd64");
+    distros := make(map[string]string);
 
     distros["OpenBSD (amd64)"] = LatestReleaseURL("OpenBSD", "amd64");
     distros["OpenBSD (i386)"]  = LatestReleaseURL("OpenBSD", "i386");  
-
+    
     distros["FreeBSD (i386)"]  = LatestReleaseURL("FreeBSD", "i386");
     distros["FreeBSD (amd64)"] = LatestReleaseURL("FreeBSD", "amd64");
+    
+    distros["Debian GNU/Linux (i386/amd64)"] = LatestReleaseURL("Debian", "amd64");
 
     return distros;
 }
@@ -156,9 +150,9 @@ func main() {
 
     w := bufio.NewWriter(f);
 
-    for name, distro := range distros {
-        fmt.Fprintf(w, "%s=%s\n", name, distro.url);
-        fmt.Printf("Name: %s and URL %s\n", name, distro.url);
+    for name, url := range distros {
+        fmt.Fprintf(w, "%s=%s\n", name, url);
+        fmt.Printf("Name: %s and URL %s\n", name, url);
     }
 
     w.Flush();
