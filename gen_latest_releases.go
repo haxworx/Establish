@@ -35,7 +35,7 @@ func UrlDataGet(url string) string {
     return string(bytes)
 }
 
-
+// this one is bogus!!!
 func GetDebian(arch string) string {
     base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd";
 
@@ -52,17 +52,19 @@ func GetDebian(arch string) string {
     return fmt.Sprintf("%s/%s", base_url, filename)
 }
 
+// returns when highest value version is found...
 func newestURL(data string, major_start int, major_end int) string {
     var found string = "";
-    for major := major_start; major < major_end; major++ {
+    for major := major_end; major >= major_start; major-- {
         for minor := 0; minor < 10; minor++ {
             tmp := fmt.Sprintf("%d.%d", major, minor)
             if strings.Contains(data, tmp) {
                 found = tmp;
+                return found;
             }
         }
     }
-    return found;
+    return "";
 }
 
 func GetFreeBSD(arch string) string {
@@ -85,7 +87,7 @@ func GetFreeBSD(arch string) string {
 func GetOpenBSD(arch string) string {
     const OPENBSD_MAJOR_START = 6;
     const OPENBSD_MAJOR_END = 10;
-    base_url := "http://mirror.ox.ac.uk/pub/OpenBSD/";
+    base_url := "http://mirror.ox.ac.uk/pub/OpenBSD";
  
     data := UrlDataGet(base_url) 
 
@@ -95,14 +97,14 @@ func GetOpenBSD(arch string) string {
     img_ver := strings.Replace(version, ".", "", -1)
     
     if version != "" {
-        return (fmt.Sprintf("%s%s/%s/install%s.fs", base_url, version, arch, img_ver))
+        return (fmt.Sprintf("%s/%s/%s/install%s.fs", base_url, version, arch, img_ver))
     }
 
-    return ("");
+    return ("")
 }
 
 func LatestURL(os string, arch string) string {
-    var url string = "";
+    var url string = ""
 
     switch (os) {
         case "OpenBSD":
