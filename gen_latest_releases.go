@@ -14,17 +14,19 @@ const FREEBSD_MAJOR_END = 20
 const OPENBSD_MAJOR_START = 6;
 const OPENBSD_MAJOR_END = 10;
 
+type searchFunc func(string) (string, string)
 type distro_t struct {
     name string;
     arch string;
+    search searchFunc;
 }
 
 var distributions = []distro_t {
-	{ name: "Debian", arch: "i386/amd64" },
-	{ name: "OpenBSD", arch: "i386" },
-	{ name: "OpenBSD", arch: "amd64" },
-	{ name: "FreeBSD", arch: "i386" },
-	{ name: "FreeBSD", arch: "amd64" },
+	{ name: "Debian", arch: "i386/amd64", search: Debian_Latest },
+	{ name: "OpenBSD", arch: "i386", search: OpenBSD_Latest },
+	{ name: "OpenBSD", arch: "amd64", search: OpenBSD_Latest },
+	{ name: "FreeBSD", arch: "i386", search: FreeBSD_Latest },
+	{ name: "FreeBSD", arch: "amd64", search: FreeBSD_Latest },
 }
 
 func Exit(value int)  {
@@ -118,38 +120,12 @@ func OpenBSD_Latest(arch string) (string, string) {
     return "", ""
 }
 
-func Latest_URL(os string, arch string) (string, string) {
-    var url string = ""
-    var version string = ""
-    
-    switch (os) {
-        case "OpenBSD":
-        url, version = OpenBSD_Latest(arch)
-        break;
-
-        case "FreeBSD":
-        url, version = FreeBSD_Latest(arch)
-        break;
-
-        case "Debian":
-        url, version = Debian_Latest(arch)
-        break;
-    }
-
-    if len(url) == 0 {
-        fmt.Printf("Error: Latest_URL %s %s\n", os, arch)
-        Exit(1)
-    }
-
-    return url, version
-}
-
 func Distro_Find_All() map[string]string {
 
     distros := make(map[string]string)
 
     for _, info := range distributions {
-	url, version := Latest_URL(info.name, info.arch);
+	url, version := info.search(info.arch);
 	release_name := fmt.Sprintf("%s %s (%s)", info.name, version, info.arch);
 	distros[release_name] = url;
     }
