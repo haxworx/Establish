@@ -14,6 +14,19 @@ const FREEBSD_MAJOR_END = 20
 const OPENBSD_MAJOR_START = 6;
 const OPENBSD_MAJOR_END = 10;
 
+type distro_t struct {
+    name string;
+    arch string;
+}
+
+var distributions = []distro_t {
+	{ name: "Debian", arch: "i386/amd64" },
+	{ name: "OpenBSD", arch: "i386" },
+	{ name: "OpenBSD", arch: "amd64" },
+	{ name: "FreeBSD", arch: "i386" },
+	{ name: "FreeBSD", arch: "amd64" },
+}
+
 func Exit(value int)  {
     os.Exit(value)
 }
@@ -128,28 +141,19 @@ func Latest_URL(os string, arch string) (string, string) {
         Exit(1)
     }
 
-    return url, fmt.Sprintf("%s %s (%s)", os, version, arch);
+    return url, version
 }
 
 func Distro_Find_All() map[string]string {
 
     distros := make(map[string]string)
 
-    url, version := Latest_URL("OpenBSD", "i386");
-    distros[version] = url;
-    
-    url, version = Latest_URL("OpenBSD", "amd64");
-    distros[version] = url;
+    for _, info := range distributions {
+	url, version := Latest_URL(info.name, info.arch);
+	release_name := fmt.Sprintf("%s %s (%s)", info.name, version, info.arch);
+	distros[release_name] = url;
+    }
 
-    url, version = Latest_URL("FreeBSD", "i386");
-    distros[version] = url;
-
-    url, version = Latest_URL("FreeBSD", "amd64");
-    distros[version] = url;
-
-    url, version = Latest_URL("Debian", "i386/amd64");
-    distros[version] = url;
- 
     return distros;
 }
 
@@ -169,7 +173,7 @@ func main() {
     defer f.Close()
 
     w := bufio.NewWriter(f)
-    
+
     for name, url := range distros {
         fmt.Fprintf(w, "%s=%s\n", name, url)
         //fmt.Printf("Adding: %s with URL: %s\n", name, url)
