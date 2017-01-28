@@ -34,8 +34,8 @@
 
 extern Ui_Main_Contents *ui;
 
-#define WIN_WIDTH 360
-#define WIN_HEIGHT 360 
+#define WIN_WIDTH 350 
+#define WIN_HEIGHT 350 
 
 static char *
 gl_text_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
@@ -96,19 +96,17 @@ void about_popup(Evas_Object *win)
     elm_win_autodel_set(win, EINA_TRUE);
 
     Evas_Object *content = elm_label_add(win);
-    elm_object_text_set(content, "<align=center>(c) Copyright 2016. Al Poole.<br><br> http://haxlab.org"
-		    		 "<br><br>netstar@gmail.com</align>");
-
+    elm_object_text_set(content, "<glow><align=center>(c) Copyright 2016. Al Poole.<br><br> http://haxlab.org"
+		    		 "<br><br>netstar@gmail.com</align></>");
     Evas_Object *popup = elm_popup_add(win);
 
     elm_object_content_set(popup, content);
 
     elm_object_part_text_set(popup, "title,text", "About");
-   
-    evas_object_show(popup);
 
     evas_object_smart_callback_add(popup, "unblock,clicked", NULL, NULL);
 
+    evas_object_show(popup);
     evas_object_show(win);
 }
 
@@ -134,6 +132,7 @@ void error_popup(Evas_Object *win)
 
     evas_object_show(win);
 }
+static int ready = -1;
 
 static void
 _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
@@ -152,8 +151,22 @@ _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
 
     elm_object_text_set(obj, txt);
     elm_combobox_hover_end(obj);
+    
+    ++ready;
+    if (ready) {
+        elm_object_disabled_set(ui->bt_ok, EINA_FALSE);
+    }
 }
 
+static void
+_combobox_storage_item_changed_cb(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
+                      void *event_info EINA_UNUSED)
+{
+    ++ready;
+    if (ready) {
+        elm_object_disabled_set(ui->bt_ok, EINA_FALSE); 
+    }
+}
 
 static void
 _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
@@ -295,7 +308,7 @@ Ui_Main_Contents *elm_window_create(void)
     ui->table = elm_table_add(popup);
     ui->box = elm_box_add(popup);
 
-    const char *message = "<font_size=18 font_weidth=semibold>Establish</font>";
+    const char *message = "<hilight><font_size=18 font_weidth=semibold>Establish</font></>";
     ui->label = elm_label_add(popup);
     elm_object_text_set(ui->label, message);
     evas_object_show(ui->label);
@@ -304,7 +317,7 @@ Ui_Main_Contents *elm_window_create(void)
     ui->combobox_source = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_source, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_source, EVAS_HINT_FILL, 0);
-    elm_object_part_text_set(ui->combobox_source, "guide", "Select an operating system...");
+    elm_object_part_text_set(ui->combobox_source, "guide", "<hilight><color=#ffffff>Select an operating system...</color></>");
     elm_box_pack_end(ui->box, ui->combobox_source);
     evas_object_show(ui->combobox_source);
 
@@ -321,7 +334,7 @@ Ui_Main_Contents *elm_window_create(void)
     ui->combobox_dest = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_dest, EVAS_HINT_FILL, 0);
-    elm_object_part_text_set(ui->combobox_dest, "guide", "Enter or select destination...");
+    elm_object_part_text_set(ui->combobox_dest, "guide", "<hilight><color=#ffffff>Enter or select destination...</color></>");
     elm_box_pack_end(ui->box, ui->combobox_dest);
     evas_object_show(ui->combobox_dest);
     Elm_Genlist_Item_Class *itc2 = elm_genlist_item_class_new();
@@ -335,6 +348,8 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_smart_callback_add(ui->combobox_dest, "item,pressed",
                                   _combobox_storage_item_pressed_cb, NULL);
 
+    evas_object_smart_callback_add(ui->combobox_dest, "changed",
+                                  _combobox_storage_item_changed_cb, NULL);
     ui->progressbar= elm_progressbar_add(popup);
     evas_object_size_hint_align_set(ui->progressbar, EVAS_HINT_FILL, 0.5);
     evas_object_size_hint_weight_set(ui->progressbar, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
@@ -362,6 +377,8 @@ Ui_Main_Contents *elm_window_create(void)
     elm_object_text_set(ui->bt_ok, "Start");
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
+    evas_object_resize(ui->bt_ok, 200, 200);
+    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
     evas_object_show(ui->bt_ok);
 
     ui->bt_cancel = elm_button_add(popup);
@@ -378,6 +395,10 @@ Ui_Main_Contents *elm_window_create(void)
    
     elm_box_pack_end(ui->box, ui->table);
 
+    Evas_Object *separator_end = elm_separator_add(popup);
+    elm_separator_horizontal_set(separator_end, EINA_TRUE);
+    evas_object_show(separator_end);
+    elm_box_pack_end(ui->box, separator_end);
     // This is for FUN!!! 
     ui->canvas = evas_object_evas_get(ui->win);
     ui->ee_effect = edje_object_add(ui->canvas);

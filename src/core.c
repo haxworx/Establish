@@ -45,6 +45,18 @@ struct _handler_t {
     Ecore_Event_Handler *complete;
 };
 
+static int
+_distro_cmp(const void *a, const void *b)
+{
+    distro_t *item1 = (distro_t *) a;
+    distro_t *item2 = (distro_t *) b;
+
+    const char *s1 = *(const char **) item1->name;
+    const char *s2 = *(const char **) item2->name;
+
+    return strcmp(s1, s2);
+}
+
 /* This section deals with the remote list of
  * URLs
  */
@@ -77,6 +89,10 @@ parse_distribution_list(char *data)
         distributions[count++]->url = strdup(start);
 
         start = end + 1;
+    }
+
+    if (count) {
+        qsort(distributions, count, sizeof(distro_t *), _distro_cmp);
     }
 
     distributions[count] = NULL;
@@ -202,7 +218,9 @@ _download_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
         j += 2;
     } 
 
-    elm_object_text_set(ui->sha256_label, sha256);
+    char label_fmt[512];
+    snprintf(label_fmt, sizeof(label_fmt), "<hilight><color=#ffffff>%s</color></>", sha256);
+    elm_object_text_set(ui->sha256_label, label_fmt);
 
     ecore_con_url_free(h->conn);
  
@@ -381,6 +399,10 @@ www_file_save(Ecore_Thread *thread, const char *remote_url, const char *local_ur
     req->finish(req->self);
 
     sync();
+
+    char label_fmt[512];
+    snprintf(label_fmt, sizeof(label_fmt), "<hilight><color=#ffffff>%s</color></>", sha256sum);
+    elm_object_text_set(ui->sha256_label, label_fmt);
 
     return strdup(sha256sum);
 }
