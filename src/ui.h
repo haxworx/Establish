@@ -29,6 +29,8 @@ struct _Ui_Main_Contents {
     Evas_Object *ee_effect;
     Evas  *canvas;
     char *sha256sum;
+    Eina_Bool have_source;
+    Eina_Bool have_destination;
 };
 
 typedef struct distro_t distro_t;

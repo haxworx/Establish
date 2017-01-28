@@ -132,7 +132,6 @@ void error_popup(Evas_Object *win)
 
     evas_object_show(win);
 }
-static int ready = -1;
 
 static void
 _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
@@ -149,21 +148,21 @@ _combobox_source_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
     if (remote_url) free(remote_url);
     remote_url = strdup(buf);
 
-    elm_object_text_set(obj, txt);
-    elm_combobox_hover_end(obj);
-    
-    ++ready;
-    if (ready) {
+    ui->have_source = EINA_TRUE;
+    if (ui->have_source && ui->have_destination) {
         elm_object_disabled_set(ui->bt_ok, EINA_FALSE);
     }
+    
+    elm_object_text_set(obj, txt);
+    elm_combobox_hover_end(obj);
 }
 
 static void
 _combobox_storage_item_changed_cb(void *data EINA_UNUSED, Evas_Object *obj EINA_UNUSED,
                       void *event_info EINA_UNUSED)
 {
-    ++ready;
-    if (ready) {
+    ui->have_destination = EINA_TRUE;
+    if (ui->have_source && ui->have_destination) {
         elm_object_disabled_set(ui->bt_ok, EINA_FALSE); 
     }
 }
@@ -177,6 +176,7 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
 
     if (local_url) free(local_url);
     local_url = strdup(txt);
+
     elm_object_text_set(obj, txt);
     elm_combobox_hover_end(obj);
 }
@@ -184,7 +184,6 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
 static void
 thread_do(void *data, Ecore_Thread *thread)
 {
-    int count = 0;
     ui->sha256sum = www_file_save(thread, remote_url, local_url);
 
     if (ecore_thread_check(thread)) {
@@ -258,6 +257,8 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
    if (txt)
        local_url = strdup(txt);
 
+   elm_object_text_set(ui->sha256_label, NULL);
+   
    printf("remote: %s and local: %s\n\n", remote_url, local_url);
 
 #if ! defined(__FreeBSD__) && ! defined(__DragonFly__)
@@ -288,10 +289,10 @@ Ui_Main_Contents *elm_window_create(void)
     char path[PATH_MAX];
 
     ui = malloc(sizeof(Ui_Main_Contents));
+    ui->have_source = ui->have_destination = EINA_FALSE;
 
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
     ui->win = elm_win_util_standard_add("Establish", "Establish");
-
 
     ui->icon = evas_object_image_add(evas_object_evas_get(ui->win));
     evas_object_image_file_set(ui->icon, "images/icon.ico", NULL);
@@ -301,21 +302,25 @@ Ui_Main_Contents *elm_window_create(void)
     Evas_Object *popup = elm_popup_add(ui->win);
     elm_popup_orient_set(popup, ELM_POPUP_ORIENT_CENTER);
     elm_popup_scrollable_set(popup, EINA_TRUE);
+    evas_object_size_hint_align_set(popup, EVAS_HINT_FILL, EVAS_HINT_FILL);
     evas_object_size_hint_weight_set(popup, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     evas_object_show(popup);
    
     ui->table = elm_table_add(popup);
     ui->box = elm_box_add(popup);
 
-    const char *message = "<hilight><font_size=18 font_weidth=semibold>Establish</font></>";
+    const char *message = "<hilight><font_size=16 font_weidth=semibold>Establish</font></>";
     ui->label = elm_label_add(popup);
     elm_object_text_set(ui->label, message);
     evas_object_show(ui->label);
     elm_box_pack_end(ui->box, ui->label);
 
+
+    /* Start of combobox source */
     ui->combobox_source = elm_combobox_add(popup);
     evas_object_size_hint_weight_set(ui->combobox_source, EVAS_HINT_EXPAND, 0);
     evas_object_size_hint_align_set(ui->combobox_source, EVAS_HINT_FILL, 0);
+    
     elm_object_part_text_set(ui->combobox_source, "guide", "<hilight><color=#ffffff>Select an operating system...</color></>");
     elm_box_pack_end(ui->box, ui->combobox_source);
     evas_object_show(ui->combobox_source);
@@ -330,12 +335,15 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_smart_callback_add(ui->combobox_source, "item,pressed",
                                      _combobox_source_item_pressed_cb, NULL);
 
+
+    /* Start of combobox destination */
     ui->combobox_dest = elm_combobox_add(popup);
-    evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, 0);
+    evas_object_size_hint_weight_set(ui->combobox_dest, EVAS_HINT_EXPAND, EVAS_HINT_FILL);
     evas_object_size_hint_align_set(ui->combobox_dest, EVAS_HINT_FILL, 0);
     elm_object_part_text_set(ui->combobox_dest, "guide", "<hilight><color=#ffffff>Enter or select destination...</color></>");
     elm_box_pack_end(ui->box, ui->combobox_dest);
     evas_object_show(ui->combobox_dest);
+
     Elm_Genlist_Item_Class *itc2 = elm_genlist_item_class_new();
     itc2->item_style = "default";
     itc2->func.text_get = gl_text_dest_get;
@@ -349,29 +357,38 @@ Ui_Main_Contents *elm_window_create(void)
 
     evas_object_smart_callback_add(ui->combobox_dest, "changed",
                                   _combobox_storage_item_changed_cb, NULL);
+    
+
+    /* Start of progress bar */
     ui->progressbar= elm_progressbar_add(popup);
     evas_object_size_hint_align_set(ui->progressbar, EVAS_HINT_FILL, 0.5);
     evas_object_size_hint_weight_set(ui->progressbar, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    //elm_progressbar_pulse_set(ui->progressbar, EINA_TRUE);
     elm_progressbar_span_size_set(ui->progressbar, 1.0);
     elm_progressbar_unit_format_set(ui->progressbar, "%1.2f%%");
     elm_box_pack_end(ui->box, ui->progressbar);
     evas_object_show(ui->progressbar);
 
+
+    /* Start of SHA256 entry widget */
     ui->sha256_label = elm_entry_add(popup);
     elm_entry_single_line_set(ui->sha256_label, EINA_TRUE);
     elm_entry_scrollable_set(ui->sha256_label, EINA_TRUE);
+    elm_entry_editable_set(ui->sha256_label, EINA_FALSE);
     evas_object_size_hint_weight_set(ui->sha256_label, EVAS_HINT_EXPAND, 0.5);
     evas_object_size_hint_align_set(ui->sha256_label, EVAS_HINT_FILL, EVAS_HINT_FILL);
     evas_object_size_hint_padding_set(ui->sha256_label, 5, 5, 0, 0);
     elm_box_pack_end(ui->box, ui->sha256_label);
     evas_object_show(ui->sha256_label);
 
+
+    /* Separator */
     Evas_Object *separator = elm_separator_add(popup);
     elm_separator_horizontal_set(separator, EINA_TRUE);
     evas_object_show(separator);
     elm_box_pack_end(ui->box, separator); 
-    
+   
+
+    /* OK Button */ 
     ui->bt_ok = elm_button_add(popup);
     elm_object_text_set(ui->bt_ok, "Start");
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
@@ -380,12 +397,14 @@ Ui_Main_Contents *elm_window_create(void)
     elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
     evas_object_show(ui->bt_ok);
 
+    /* Cancel Button */
     ui->bt_cancel = elm_button_add(popup);
     elm_object_text_set(ui->bt_cancel, "Exit");
     elm_table_pack(ui->table, ui->bt_cancel, 1, 0, 1, 1);
     evas_object_show(ui->bt_cancel);
     evas_object_smart_callback_add(ui->bt_cancel, "clicked", _bt_cancel_clicked_cb, NULL);
 
+    /* About Button */
     ui->bt_about = elm_button_add(popup);
     elm_object_text_set(ui->bt_about, "About");
     elm_table_pack(ui->table, ui->bt_about, 2, 0, 1, 1);
@@ -394,10 +413,6 @@ Ui_Main_Contents *elm_window_create(void)
    
     elm_box_pack_end(ui->box, ui->table);
 
-    Evas_Object *separator_end = elm_separator_add(popup);
-    elm_separator_horizontal_set(separator_end, EINA_TRUE);
-    evas_object_show(separator_end);
-    elm_box_pack_end(ui->box, separator_end);
     // This is for FUN!!! 
     ui->canvas = evas_object_evas_get(ui->win);
     ui->ee_effect = edje_object_add(ui->canvas);
@@ -407,14 +422,14 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_resize(ui->ee_effect,WIN_WIDTH, WIN_HEIGHT);
     evas_object_show(ui->ee_effect);
     evas_object_pass_events_set(ui->ee_effect, EINA_TRUE);
-
-
+    // end of FUN!!! back to real life!
+ 
     Evas_Object *table = elm_table_add(popup);
     elm_table_pack(table, ui->box, 0, 0, 1, 1);
     elm_table_pack(table, ui->table, 0, 1, 1, 1);
     elm_object_content_set(popup, table);
-    evas_object_size_hint_weight_set(table, EVAS_HINT_EXPAND, 0.5);
-    evas_object_size_hint_align_set(table, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_weight_set(table, EVAS_HINT_EXPAND, 0);
+    evas_object_size_hint_align_set(table, EVAS_HINT_FILL, 0);
     evas_object_show(table);
     
     evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
@@ -424,11 +439,11 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_show(popup);
    
     evas_object_size_hint_weight_set(ui->table, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    evas_object_size_hint_align_set(ui->table, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_align_set(ui->table, EVAS_HINT_FILL, 0);
     evas_object_show(ui->table);
 
     evas_object_size_hint_weight_set(ui->box, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, EVAS_HINT_FILL);
+    evas_object_size_hint_align_set(ui->box, EVAS_HINT_FILL, 0);
     evas_object_show(ui->box);
 
     evas_object_event_callback_add(ui->win, EVAS_CALLBACK_RESIZE, _win_resize_cb, NULL);
