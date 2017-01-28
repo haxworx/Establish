@@ -9,6 +9,11 @@ import (
     "bufio"
 )
 
+const FREEBSD_MAJOR_START = 11
+const FREEBSD_MAJOR_END = 20
+const OPENBSD_MAJOR_START = 6;
+const OPENBSD_MAJOR_END = 10;
+
 func Exit(value int)  {
     os.Exit(value)
 }
@@ -20,7 +25,7 @@ func Check(err error) {
     }
 }
 
-func UrlDataGet(url string) string {
+func URL_Get(url string) string {
     req, err := http.Get(url)
     Check(err)
     defer req.Body.Close()
@@ -35,25 +40,8 @@ func UrlDataGet(url string) string {
     return string(bytes)
 }
 
-// this one is bogus!!!
-func GetDebian(arch string) string {
-    base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd";
-
-    data := UrlDataGet(base_url)
-
-    tag_start := "<a href=\"";
-    tag_full := tag_start + "debian-"
-    idx := strings.Index(data, tag_full)
-
-    str := data[idx + len(tag_start) :len(data)];
-    end := strings.Index(str, "\"") 
-    filename := str[0:end]
-
-    return fmt.Sprintf("%s/%s", base_url, filename)
-}
-
 // returns when highest value version is found...
-func newestURL(data string, major_start int, major_end int) string {
+func Latest_Version(data string, major_start int, major_end int) string {
     var found string = "";
     for major := major_end; major >= major_start; major-- {
         for minor := 0; minor < 10; minor++ {
@@ -67,77 +55,101 @@ func newestURL(data string, major_start int, major_end int) string {
     return "";
 }
 
-func GetFreeBSD(arch string) string {
+func Debian_Latest(arch string) (string, string) {
+    base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd";
 
-    const FREEBSD_MAJOR_START = 11
-    const FREEBSD_MAJOR_END = 20
-    base_url := "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES";
+    data := URL_Get(base_url)
 
-    data := UrlDataGet(base_url)
+    tag_start := "<a href=\"";
+    tag_full := tag_start + "debian-"
+    idx := strings.Index(data, tag_full)
+    str := data[idx + len(tag_start) :len(data)];
+    end := strings.Index(str, "\"") 
+    version_start := data[idx + len(tag_full):len(data)];
+    version_end := strings.Index(version_start, "-");
+    version := version_start[0:version_end];
+    filename := str[0:end]
 
-    var version string = newestURL(data, FREEBSD_MAJOR_START, FREEBSD_MAJOR_END)
-
-    if version != "" {
-        return fmt.Sprintf("%s/%s/FreeBSD-%s-RELEASE-%s-memstick.img", base_url, version, version, arch)
-    }
-
-    return version;
+    return fmt.Sprintf("%s/%s", base_url, filename), version;
 }
 
-func GetOpenBSD(arch string) string {
-    const OPENBSD_MAJOR_START = 6;
-    const OPENBSD_MAJOR_END = 10;
+func FreeBSD_Latest(arch string) (string, string) {
+
+    base_url := "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES";
+
+    data := URL_Get(base_url)
+
+    var version string = Latest_Version(data, FREEBSD_MAJOR_START, FREEBSD_MAJOR_END)
+
+    if version != "" {
+        return fmt.Sprintf("%s/%s/FreeBSD-%s-RELEASE-%s-memstick.img", base_url, version, version, arch), version;
+    }
+
+    return "", version;
+}
+
+func OpenBSD_Latest(arch string) (string, string) {
     base_url := "http://mirror.ox.ac.uk/pub/OpenBSD";
  
-    data := UrlDataGet(base_url) 
+    data := URL_Get(base_url) 
 
-    var version string  = newestURL(data, OPENBSD_MAJOR_START, OPENBSD_MAJOR_END)
+    var version string  = Latest_Version(data, OPENBSD_MAJOR_START, OPENBSD_MAJOR_END)
 
     // hack for changing 6.0 to 60 for filename on server
     img_ver := strings.Replace(version, ".", "", -1)
     
     if version != "" {
-        return (fmt.Sprintf("%s/%s/%s/install%s.fs", base_url, version, arch, img_ver))
+        return fmt.Sprintf("%s/%s/%s/install%s.fs", base_url, version, arch, img_ver), version;
     }
 
-    return ("")
+    return "", ""
 }
 
-func LatestURL(os string, arch string) string {
+func Latest_URL(os string, arch string) (string, string) {
     var url string = ""
-
+    var version string = ""
+    
     switch (os) {
         case "OpenBSD":
-        url = GetOpenBSD(arch)
+        url, version = OpenBSD_Latest(arch)
         break;
 
         case "FreeBSD":
-        url = GetFreeBSD(arch)
+        url, version = FreeBSD_Latest(arch)
         break;
 
         case "Debian":
-        url = GetDebian(arch)
+        url, version = Debian_Latest(arch)
         break;
     }
 
     if len(url) == 0 {
-        fmt.Printf("Error: LatestURL %s %s\n", os, arch)
+        fmt.Printf("Error: Latest_URL %s %s\n", os, arch)
         Exit(1)
     }
 
-    return (url)
+    return url, fmt.Sprintf("%s %s (%s)", os, version, arch);
 }
 
-func distroGetAll() map[string]string {
+func Distro_Find_All() map[string]string {
 
     distros := make(map[string]string)
 
-    distros["OpenBSD (amd64)"] = LatestURL("OpenBSD", "amd64")
-    distros["OpenBSD (i386)"]  = LatestURL("OpenBSD", "i386")  
-    distros["FreeBSD (i386)"]  = LatestURL("FreeBSD", "i386")
-    distros["FreeBSD (amd64)"] = LatestURL("FreeBSD", "amd64")  
-    distros["Debian GNU/Linux (i386/amd64)"] = LatestURL("Debian", "amd64")
+    url, version := Latest_URL("OpenBSD", "i386");
+    distros[version] = url;
+    
+    url, version = Latest_URL("OpenBSD", "amd64");
+    distros[version] = url;
 
+    url, version = Latest_URL("FreeBSD", "i386");
+    distros[version] = url;
+
+    url, version = Latest_URL("FreeBSD", "amd64");
+    distros[version] = url;
+
+    url, version = Latest_URL("Debian", "i386/amd64");
+    distros[version] = url;
+ 
     return distros;
 }
 
@@ -150,7 +162,7 @@ func main() {
 
     file := os.Args[1];
 
-    distros := distroGetAll()
+    distros := Distro_Find_All()
 
     f, err := os.Create(file)
     Check(err)
@@ -160,7 +172,7 @@ func main() {
     
     for name, url := range distros {
         fmt.Fprintf(w, "%s=%s\n", name, url)
-        fmt.Printf("Adding: %s with URL: %s\n", name, url)
+        //fmt.Printf("Adding: %s with URL: %s\n", name, url)
     }
 
     fmt.Printf("Saved to %s", file)
