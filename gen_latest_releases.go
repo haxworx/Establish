@@ -152,7 +152,7 @@ func main() {
         //fmt.Printf("Adding: %s with URL: %s\n", name, url)
     }
 
-    fmt.Printf("Saved to %s", file)
+    fmt.Printf("Saved to %s\n", file)
     w.Flush()
 
     Exit(0)
