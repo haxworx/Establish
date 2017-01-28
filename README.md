@@ -15,4 +15,7 @@ be displayed for your convenience.
 On some operating systems disk buffering is required and thus 
 implemented.
 
+Included is a small program that will search for distributions,
+and find the latest image for various architectures. This program
+requires Golang compiler/interpreter.
 

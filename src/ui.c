@@ -187,7 +187,6 @@ thread_do(void *data, Ecore_Thread *thread)
     int count = 0;
     ui->sha256sum = www_file_save(thread, remote_url, local_url);
 
-
     if (ecore_thread_check(thread)) {
        return;
     }
