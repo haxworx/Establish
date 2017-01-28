@@ -14,19 +14,20 @@ const FREEBSD_MAJOR_END = 20
 const OPENBSD_MAJOR_START = 6;
 const OPENBSD_MAJOR_END = 10;
 
-type searchFunc func(string) (string, string)
+type searchFunc func(string, string) (string, string)
 type distro_t struct {
     name string;
     arch string;
+    url  string;
     search searchFunc;
 }
 
 var distributions = []distro_t {
-	{ name: "Debian", arch: "i386/amd64", search: Debian_Latest },
-	{ name: "OpenBSD", arch: "i386", search: OpenBSD_Latest },
-	{ name: "OpenBSD", arch: "amd64", search: OpenBSD_Latest },
-	{ name: "FreeBSD", arch: "i386", search: FreeBSD_Latest },
-	{ name: "FreeBSD", arch: "amd64", search: FreeBSD_Latest },
+	{ name: "Debian", arch: "i386/amd64", search: LatestDebian, url: "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd" },
+	{ name: "OpenBSD", arch: "i386", search: LatestOpenBSD, url: "http://mirror.ox.ac.uk/pub/OpenBSD" },
+	{ name: "OpenBSD", arch: "amd64", search: LatestOpenBSD, url: "http://mirror.ox.ac.uk/pub/OpenBSD" },
+	{ name: "FreeBSD", arch: "i386", search: LatestFreeBSD, url: "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES" },
+	{ name: "FreeBSD", arch: "amd64", search: LatestFreeBSD, url: "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES"  },
 }
 
 func Exit(value int)  {
@@ -40,7 +41,7 @@ func Check(err error) {
     }
 }
 
-func URL_Get(url string) string {
+func GetURL(url string) string {
     req, err := http.Get(url)
     Check(err)
     defer req.Body.Close()
@@ -56,7 +57,7 @@ func URL_Get(url string) string {
 }
 
 // returns when highest value version is found...
-func Latest_Version(data string, major_start int, major_end int) string {
+func LatestVersionGet(data string, major_start int, major_end int) string {
     var found string = "";
     for major := major_end; major >= major_start; major-- {
         for minor := 0; minor < 10; minor++ {
@@ -70,10 +71,9 @@ func Latest_Version(data string, major_start int, major_end int) string {
     return "";
 }
 
-func Debian_Latest(arch string) (string, string) {
-    base_url := "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd";
+func LatestDebian(base_url string, arch string) (string, string) {
 
-    data := URL_Get(base_url)
+    data := GetURL(base_url)
 
     tag_start := "<a href=\"";
     tag_full := tag_start + "debian-"
@@ -88,13 +88,11 @@ func Debian_Latest(arch string) (string, string) {
     return fmt.Sprintf("%s/%s", base_url, filename), version;
 }
 
-func FreeBSD_Latest(arch string) (string, string) {
+func LatestFreeBSD(base_url string, arch string) (string, string) {
 
-    base_url := "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES";
+    data := GetURL(base_url)
 
-    data := URL_Get(base_url)
-
-    var version string = Latest_Version(data, FREEBSD_MAJOR_START, FREEBSD_MAJOR_END)
+    var version string = LatestVersionGet(data, FREEBSD_MAJOR_START, FREEBSD_MAJOR_END)
 
     if version != "" {
         return fmt.Sprintf("%s/%s/FreeBSD-%s-RELEASE-%s-memstick.img", base_url, version, version, arch), version;
@@ -103,16 +101,15 @@ func FreeBSD_Latest(arch string) (string, string) {
     return "", version;
 }
 
-func OpenBSD_Latest(arch string) (string, string) {
-    base_url := "http://mirror.ox.ac.uk/pub/OpenBSD";
- 
-    data := URL_Get(base_url) 
+func LatestOpenBSD(base_url string, arch string) (string, string) {
 
-    var version string  = Latest_Version(data, OPENBSD_MAJOR_START, OPENBSD_MAJOR_END)
+    data := GetURL(base_url) 
+
+    var version string  = LatestVersionGet(data, OPENBSD_MAJOR_START, OPENBSD_MAJOR_END)
 
     // hack for changing 6.0 to 60 for filename on server
     img_ver := strings.Replace(version, ".", "", -1)
-    
+
     if version != "" {
         return fmt.Sprintf("%s/%s/%s/install%s.fs", base_url, version, arch, img_ver), version;
     }
@@ -120,12 +117,12 @@ func OpenBSD_Latest(arch string) (string, string) {
     return "", ""
 }
 
-func Distro_Find_All() map[string]string {
+func DistroFindAll() map[string]string {
 
     distros := make(map[string]string)
 
     for _, info := range distributions {
-	url, version := info.search(info.arch);
+	url, version := info.search(info.url, info.arch);
 	release_name := fmt.Sprintf("%s %s (%s)", info.name, version, info.arch);
 	distros[release_name] = url;
     }
@@ -142,7 +139,7 @@ func main() {
 
     file := os.Args[1];
 
-    distros := Distro_Find_All()
+    distros := DistroFindAll()
 
     f, err := os.Create(file)
     Check(err)
