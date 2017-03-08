@@ -26,6 +26,7 @@ var distributions = []distro_t {
 	{ name: "Debian", arch: "i386/amd64", search: LatestDebian, url: "http://cdimage.debian.org/debian-cd/current/multi-arch/iso-cd" },
 	{ name: "OpenBSD", arch: "i386", search: LatestOpenBSD, url: "http://mirror.ox.ac.uk/pub/OpenBSD" },
 	{ name: "OpenBSD", arch: "amd64", search: LatestOpenBSD, url: "http://mirror.ox.ac.uk/pub/OpenBSD" },
+        { name: "OpenSUSE", arch: "x86_64", search: LatestOpenSUSE, url: "http://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-DVD-x86_64-Current.iso" },
 	{ name: "FreeBSD", arch: "i386", search: LatestFreeBSD, url: "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES" },
 	{ name: "FreeBSD", arch: "amd64", search: LatestFreeBSD, url: "http://ftp.freebsd.org/pub/FreeBSD/releases/ISO-IMAGES"  },
 }
@@ -99,6 +100,10 @@ func LatestFreeBSD(base_url string, arch string) (string, string) {
     }
 
     return "", version;
+}
+
+func LatestOpenSUSE(base_url string, arch string) (string, string) {
+	return base_url, "Tumbleweed"
 }
 
 func LatestOpenBSD(base_url string, arch string) (string, string) {
