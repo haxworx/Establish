@@ -38,7 +38,7 @@ extern Ui_Main_Contents *ui;
 #define WIN_HEIGHT 350 
 
 static char *
-gl_text_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
+_gl_text_get_cb(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
 {
     char buf[128];
     int i = (int)(uintptr_t)data;
@@ -47,7 +47,7 @@ gl_text_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUS
 }
 
 static char *
-gl_text_dest_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
+_gl_text_dest_get_cb(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA_UNUSED)
 {
     char buf[128];
     int i = (int)(uintptr_t)data;
@@ -58,7 +58,7 @@ gl_text_dest_get(void *data, Evas_Object *obj EINA_UNUSED, const char *part EINA
 
 
 static Eina_Bool
-gl_filter_get(void *data, Evas_Object *obj EINA_UNUSED, void *key)
+_gl_filter_get_cb(void *data, Evas_Object *obj EINA_UNUSED, void *key)
 {
     if (strlen((char *) key)) return EINA_TRUE;
 
@@ -72,7 +72,7 @@ combobox_storage_update(void)
     Elm_Genlist_Item_Class *itc;
     itc = elm_genlist_item_class_new();
     itc->item_style = "default";
-    itc->func.text_get = gl_text_dest_get;
+    itc->func.text_get = _gl_text_dest_get_cb;
     
     elm_genlist_clear(ui->combobox_dest);
      
@@ -182,7 +182,7 @@ _combobox_storage_item_pressed_cb(void *data EINA_UNUSED, Evas_Object *obj,
 }
 
 static void
-thread_do(void *data, Ecore_Thread *thread)
+_download_begin_cb(void *data, Ecore_Thread *thread)
 {
     ui->sha256sum = www_file_save(thread, remote_url, local_url);
 
@@ -192,7 +192,7 @@ thread_do(void *data, Ecore_Thread *thread)
 }
 
 static void
-thread_end(void *data, Ecore_Thread *thread)
+_download_end_cb(void *data, Ecore_Thread *thread)
 {
     if (ui->sha256sum) {
         elm_object_text_set(ui->sha256_label, ui->sha256sum);
@@ -205,7 +205,7 @@ thread_end(void *data, Ecore_Thread *thread)
 }
 
 static void
-thread_feedback(void *data, Ecore_Thread *thread, void *msg)
+_download_feedback_cb(void *data, Ecore_Thread *thread, void *msg)
 {
     int *c = msg;
 
@@ -214,7 +214,7 @@ thread_feedback(void *data, Ecore_Thread *thread, void *msg)
     free(c);
 }
 
-#define thread_cancel thread_end
+#define _download_cancel_cb _download_end_cb
 
 static void
 _win_delete_cb(void *data, Evas_Object *obj, void *event_info)
@@ -267,8 +267,8 @@ _bt_clicked_cb(void *data EINA_UNUSED, Evas_Object *obj, void *event EINA_UNUSED
 #else
    /* FreeBSD uses buffered char devices */
    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
-   thread = ecore_thread_feedback_run(thread_do, thread_feedback, 
-                   thread_end, thread_cancel,
+   thread = ecore_thread_feedback_run(_download_begin_cb, _download_feedback_cb, 
+                   _download_end_cb, _download_cancel_cb,
                    NULL, EINA_FALSE);
 #endif
    return; 
@@ -283,7 +283,8 @@ _win_resize_cb(void *data, Evas *e, Evas_Object *obj,void *event_info)
     evas_object_resize(ui->ee_effect ,w,h);
 }
 
-Ui_Main_Contents *elm_window_create(void)
+Ui_Main_Contents *
+elm_window_create(void)
 {
     int i;
     char path[PATH_MAX];
@@ -327,7 +328,7 @@ Ui_Main_Contents *elm_window_create(void)
 
     Elm_Genlist_Item_Class *itc = elm_genlist_item_class_new();
     itc->item_style = "default";
-    itc->func.text_get = gl_text_get;
+    itc->func.text_get = _gl_text_get_cb;
     
     for (i = 0; distributions[i] != NULL; i++)
         elm_genlist_item_append(ui->combobox_source, itc, (void *) (uintptr_t) i,
@@ -346,7 +347,7 @@ Ui_Main_Contents *elm_window_create(void)
 
     Elm_Genlist_Item_Class *itc2 = elm_genlist_item_class_new();
     itc2->item_style = "default";
-    itc2->func.text_get = gl_text_dest_get;
+    itc2->func.text_get = _gl_text_dest_get_cb;
 
     for (i = 0; storage[i] != NULL; i++)
         elm_genlist_item_append(ui->combobox_dest, itc2, (void *) (uintptr_t) i,
@@ -432,10 +433,10 @@ Ui_Main_Contents *elm_window_create(void)
     evas_object_size_hint_align_set(table, EVAS_HINT_FILL, 0);
     evas_object_show(table);
     
-    evas_object_resize(ui->win, WIN_WIDTH, WIN_HEIGHT);
+    evas_object_resize(ui->win, WIN_WIDTH * elm_config_scale_get(), WIN_HEIGHT * elm_config_scale_get());
     evas_object_show(ui->win);
 
-    evas_object_resize(popup, 600, 600);
+    evas_object_resize(popup, WIN_WIDTH  - 1* elm_config_scale_get(), WIN_HEIGHT - 1 * elm_config_scale_get());
     evas_object_show(popup);
    
     evas_object_size_hint_weight_set(ui->table, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
