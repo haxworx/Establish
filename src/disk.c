@@ -34,7 +34,7 @@
 extern Ui_Main_Contents *ui;
 
 static void
-_clear_storage(void)
+_storage_list_reset(void)
 {
     int i;
 
@@ -56,7 +56,7 @@ _string_cmp(const void *a, const void *b)
 }
 
 int 
-system_get_disks(void)
+system_disks_get(void)
 {
     int disk_count = 0;
     char buf[256];
@@ -64,7 +64,7 @@ system_get_disks(void)
     char *drives;
     size_t len;
 
-    _clear_storage();
+    _storage_list_reset();
 
 #if defined(__OpenBSD__) || defined(__NetBSD__)
     static const mib[] = { CTL_HW, HW_DISKNAMES };
@@ -222,7 +222,7 @@ skip:
     if (disk_count) {
         qsort(storage, disk_count, sizeof(char *), _string_cmp);
         if (ui) {
-            update_combobox_storage();
+            combobox_storage_update();
         }
     }
 

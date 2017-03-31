@@ -34,10 +34,10 @@
 Ui_Main_Contents *ui = NULL;
 
 Eina_Bool
-system_check_changes(void *data)
+system_disks_check(void *data)
 {
     (void) data;
-    int count = system_get_disks();
+    int count = system_disks_get();
     if (count) {
         ecore_timer_del(timer);
         timer = NULL;
@@ -47,7 +47,7 @@ system_check_changes(void *data)
 }
 
 static
-void _warning_to_user(void)
+void _warning(void)
 {
     printf("WARNING!!!\n");
     printf("Please check before you write to disk.\n");
@@ -63,14 +63,14 @@ elm_main(int argc, char **argv)
 
     elm_init(argc, argv);
 
-    if (!system_get_disks()) {
+    if (!system_disks_get()) {
         /* keep checking until disk found */ 
-        timer = ecore_timer_add(3.0, system_check_changes, NULL);
+        timer = ecore_timer_add(3.0, system_disks_check, NULL);
     }
 
-    get_distribution_list();
+    remote_distributions_get();
 
-    _warning_to_user();
+    _warning();
 
     ecore_main_loop_begin();
     

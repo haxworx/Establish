@@ -28,7 +28,7 @@
  * another server */
 #define REMOTE_LIST_URL "http://haxlab.org/list.txt"
 
-Eina_Bool get_distribution_list(void);
+Eina_Bool remote_distributions_get(void);
 
 /* ecore implementation */
 void ecore_www_file_save(const char *, const char *);

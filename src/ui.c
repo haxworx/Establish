@@ -66,7 +66,7 @@ gl_filter_get(void *data, Evas_Object *obj EINA_UNUSED, void *key)
 }
 
 void
-update_combobox_storage(void)
+combobox_storage_update(void)
 {
     int i;
     Elm_Genlist_Item_Class *itc;

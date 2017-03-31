@@ -143,7 +143,7 @@ _list_complete_cb(void *data, int type EINA_UNUSED, void *event_info)
 }
 
 Eina_Bool
-get_distribution_list(void)
+remote_distributions_get(void)
 {
     handler_t *handle = calloc(1, sizeof(*handle));
 
