@@ -395,7 +395,7 @@ elm_window_create(void)
     elm_table_pack(ui->table, ui->bt_ok, 0, 0, 1, 1);
     evas_object_smart_callback_add(ui->bt_ok, "clicked", _bt_clicked_cb, NULL);
     evas_object_resize(ui->bt_ok, 200, 200);
-    elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
+    //elm_object_disabled_set(ui->bt_ok, EINA_TRUE);
     evas_object_show(ui->bt_ok);
 
     /* Cancel Button */
