@@ -61,7 +61,7 @@ func GetURL(url string) string {
 func LatestVersionGet(data string, major_start int, major_end int) string {
     var found string = "";
     for major := major_end; major >= major_start; major-- {
-        for minor := 0; minor < 10; minor++ {
+        for minor := 9; minor >= 0; minor-- {
             tmp := fmt.Sprintf("%d.%d", major, minor)
             if strings.Contains(data, tmp) {
                 found = tmp;
