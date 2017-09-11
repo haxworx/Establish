@@ -7,7 +7,72 @@
   modification, are permitted provided that the following conditions are met:
       * Redistributions of source code must retain the above copyright
         notice, this list of conditions and the following disclaimer.
-      * Redistributions in binary form must reproduce the above copyright
+      * Redistribut
+      * fsd
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      *
+      * ions in binary form must reproduce the above copyright
         notice, this list of conditions and the following disclaimer in the
         documentation and/or other materials provided with the distribution.
       * Neither the name of the <organization> nor the
@@ -42,11 +107,11 @@ _storage_list_reset(void)
        if (storage[i]) {
           free(storage[i]);
           storage[i] = NULL;
-       } 
+       }
     }
 }
 
-static int 
+static int
 _string_cmp(const void *a, const void *b)
 {
     const char *s1 = *(const char **) a;
@@ -55,7 +120,7 @@ _string_cmp(const void *a, const void *b)
     return strcmp(s1, s2);
 }
 
-int 
+int
 system_disks_get(void)
 {
     int disk_count = 0;
@@ -82,18 +147,18 @@ system_disks_get(void)
     }
 
     if ((sysctl(mib, miblen, drives, &len, NULL, 0)) < 0) {
-        return (0); 
+        return (0);
     }
 
     char *s = drives;
     while (s) {
         char *end = strchr(s, ':');
-        if (!end) { 
+        if (!end) {
             break;
-        }        
-      
+        }
+
         *end = '\0';
- 
+
 	if (is_first || !strncmp(s, "cd", 2)) {
             is_first = false;
 	    goto skip;
@@ -118,7 +183,7 @@ skip:
 #elif defined(__FreeBSD__) || defined(__DragonFly__)
     struct statfs *mounts;
     int i;
- 
+
 
     /* This gets a list of disks recognised by the kernel */
     /* However the ordering is not too predictable, hence */
@@ -136,11 +201,11 @@ skip:
     if ((sysctlbyname("kern.disks", drives, &len, NULL, 0)) < 0) {
         return (0);
     }
-    
+
     char *s = drives;
     while (s) {
         char *end = strchr(s, ' ');
-	if (end)  
+	if (end)
 	*end = '\0';
         /* Skip these prefixed devices as they are not useful for us */
         if (!strncmp(s, "cd", 2) || !strncmp(s, "vn", 2) || !strncmp(s, "md", 2)) {
@@ -160,7 +225,7 @@ skip:
         }
 skip:
 	if (!end) {
-            break;	
+            break;
 	}
 	end++;
 	s = end;
@@ -175,16 +240,16 @@ skip:
 
     eeze_init();
 
-    devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_MOUNTABLE, NULL); 
+    devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_MOUNTABLE, NULL);
     if (!devices) {
         devices = eeze_udev_find_by_type(EEZE_UDEV_TYPE_DRIVE_REMOVABLE, NULL);
     }
 
     EINA_LIST_FOREACH(devices, l, data) {
-	path = eeze_udev_syspath_get_parent((char *) data); 
+	path = eeze_udev_syspath_get_parent((char *) data);
 	if (path) {
             if (!eina_list_data_find(parents, path)) {
-                parents = eina_list_append(parents, path);	
+                parents = eina_list_append(parents, path);
 	    }
 	}
     }
@@ -197,7 +262,7 @@ skip:
     EINA_LIST_FOREACH(devices, l, data) {
         path = eeze_udev_syspath_get_devpath((char *) data);
 	if (path) {
-            blacklist = eina_list_append(blacklist, path); 
+            blacklist = eina_list_append(blacklist, path);
 	}
     }
 
@@ -216,7 +281,7 @@ skip:
     eeze_shutdown();
 #else
 #error "Unsupported Operating System"
-#endif   
+#endif
     storage[disk_count] = NULL;
 
     if (disk_count) {
