@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#if defined(__linux__)sssss
+#if defined(__linux__)
 #include <Eina.h>
 #include <Eeze.h>
 #include <Eeze_Disk.h>
