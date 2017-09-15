@@ -2,9 +2,9 @@ You'll need to install EFL from enlightenment.org.
 
 Most Linux distributions will use the package names of either:
 
-efl-dev or efl-devel 
+efl-dev or efl-devel
 
-FreeBSD and DragonFly BSD contain recent versions of 
+FreeBSD and DragonFly BSD contain recent versions of
 EFL and Enlightenment. Ordinarily named:
 
 efl and enlightenment
@@ -14,5 +14,7 @@ You'll also need pkg-config and a C compiler!
 Simply run "make" or "gmake" and run the "establish"
 binary.
 
-For generating OS image lists, you'll need golang 
+For generating OS image lists, you'll need golang
 installed too...
+
+
