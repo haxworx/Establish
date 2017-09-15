@@ -1,8 +1,8 @@
-TARGET = establish
+fffTARGET = establish
 SRC_DIR=src
 
-PKGS=ecore ecore-con elementary openssl 
-LIBS = 
+PKGS=ecore ecore-con elementary openssl
+LIBS =
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
